@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#06191f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><title>SLIC Safe Driving Challenge · Motor Show 2026</title><link rel="icon" href="assets/logo.png"><link rel="stylesheet" href="assets/game.css"><link rel="stylesheet" href="assets/game-flow.css"></head><body>
+<div class="desktop-game-notice"><img src="assets/logo.png" alt="SLIC General" width="120"><span class="eyebrow">SLIC MOTOR SHOW 2026</span><h2>Your phone.<br>Your starting grid.</h2><p>Scan the QR code on the Motor Show screen with your phone camera to join the 30-second challenge.</p><a class="big teal" href="index.html">BACK TO MOTOR SHOW →</a></div>
+
+<div class="stage" id="stage" data-screen="reg">
+  <canvas id="cv" aria-label="Three-lane driving game"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" id="hud">
+    <div class="pill time" id="timePill"><small>TIME</small><b id="time">30</b></div>
+    <div class="pill score"><small>SCORE</small><b id="score">0</b></div>
+    <div class="pill"><small>SHIELDS</small><b id="shields">0</b></div>
+    <div class="hud-btns"><button class="pause" id="muteBtn" aria-label="Mute sound">🔊</button><button class="pause" id="pauseBtn" aria-label="Pause game">Ⅱ</button></div>
+  </div>
+  <div class="timebar" id="timebar"><i id="timefill"></i></div>
+  <div class="combo" id="combo">COMBO x2</div>
+  <div class="tapzones" id="tap"><div id="tapL"></div><div id="tapR"></div></div>
+  <div class="hint" id="hint" style="display:none"><span>‹</span><span>›</span></div>
+
+  <!-- 1. REGISTRATION -->
+  <section class="ov on" id="reg">
+    <img class="logo-big reg-logo" src="assets/logo.png" alt="SLIC General">
+    <span class="eyebrow">SLIC MOTOR SHOW 2026</span>
+    <h2 class="flow-title">WELCOME TO<br><em>SLIC MOTOR SHOW!</em></h2>
+    <p class="sub">Get ready for the ultimate 30-second Safe Driving Challenge!</p>
+    <div class="how compact-how"><div><b>🛡</b>Shield +100</div><div><b>●</b>Coin +250</div><div><b>↔</b>Swipe to steer</div><div><b>🏆</b>1,000+ unlocks the challenge</div></div>
+    <form id="regForm" novalidate>
+      <div class="field"><label for="pname">YOUR NAME</label><input id="pname" maxlength="40" autocomplete="name" placeholder="e.g. Kasun Perera" required></div>
+      <div class="field"><label for="pphone">SRI LANKAN MOBILE NUMBER</label><input id="pphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="07X XXX XXXX" required></div>
+      <div class="err" id="err" aria-live="polite"></div>
+      <button class="big" type="submit">START MY CHALLENGE →</button>
+    </form>
+    <p class="tiny">One attempt per player. Your details stay on this phone only and are not sent anywhere. Your number is never shown on the leaderboard.</p>
+  </section>
+
+  <!-- COUNTDOWN / PAUSE -->
+  <section class="ov" id="countOv" style="background:#04121a66"><div class="count" id="countNum">3</div></section>
+  <section class="ov" id="pauseOv"><span class="eyebrow">PAUSED</span><h2>Your road can wait.</h2><p class="sub">Your single attempt is still running. Resume when you're ready.</p><button class="big teal" id="resumeBtn">RESUME →</button></section>
+
+  <!-- 2a. ELIGIBLE -->
+  <section class="ov celebrate" id="eligibleOv">
+    <div class="trophy" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c2"/><stop offset=".45" stop-color="#ffce69"/><stop offset="1" stop-color="#b48420"/></linearGradient></defs><path d="M36 18h48v28c0 22-48 22-48 0z" fill="url(#tg)"/><path d="M36 26H20v12c0 12 10 18 20 18M84 26h16v12c0 12-10 18-20 18" fill="none" stroke="url(#tg)" stroke-width="6"/><rect x="55" y="62" width="10" height="20" fill="url(#tg)"/><rect x="38" y="84" width="44" height="10" rx="3" fill="url(#tg)"/><rect x="32" y="94" width="56" height="10" rx="3" fill="#00adb8"/></svg></div>
+    <span class="eyebrow">YOUR FINAL SCORE</span>
+    <div class="scorebig glow" id="eligScore">0</div>
+    <h2 class="flow-title">CONGRATULATIONS!</h2>
+    <p class="sub strong">AMAZING DRIVE! YOU'VE UNLOCKED THE SERVICE AWARENESS CHALLENGE!</p>
+    <button class="big gold" id="toFacebook">CONTINUE →</button>
+  </section>
+
+  <!-- 2b. NOT ELIGIBLE -->
+  <section class="ov" id="doneOv">
+    <span class="eyebrow">CHALLENGE COMPLETE!</span>
+    <h2 class="flow-title">THANK YOU FOR DRIVING<br><em>WITH SLIC GENERAL!</em></h2>
+    <p class="result-label">YOUR FINAL SCORE</p><div class="scorebig" id="doneScore">0</div>
+    <div class="stats"><div><b id="stShield">0</b><span>SHIELDS</span></div><div><b id="stCoin">0</b><span>COINS</span></div><div><b id="stDodge">0</b><span>DODGED</span></div></div>
+    <p class="sub">Scores above 1,000 unlock the Service Awareness Challenge. Thank you for driving safely – on the road, every second counts.</p>
+    <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW HALL OF FAME 🏆</button></div>
+  </section>
+
+  <!-- 3. FACEBOOK -->
+  <section class="ov" id="fbOv">
+    <div class="fb-art" aria-hidden="true">
+      <span class="fb-bubble b1">👍</span><span class="fb-bubble b2">❤</span><span class="fb-bubble b3">🚗</span>
+      <div class="fb-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#1877F2"/><path d="M33 31l1-7h-7v-4.5c0-2 1-3.8 4-3.8h3V9.6S31.3 9 28.6 9C23 9 20 12.3 20 18v6h-6v7h6v17a24 24 0 0 0 7 0V31z" fill="#fff"/></svg></div>
+      <img class="fb-logo" src="assets/logo.png" alt="">
+    </div>
+    <h2 class="flow-title">STAY CONNECTED<br><em>WITH SLIC GENERAL!</em></h2>
+    <p class="sub">Follow our journey for exciting updates, motor protection tips and exclusive campaigns!</p>
+    <a class="fb-link" id="fbLink" href="#" target="_blank" rel="noopener">facebook.com/SriLankaInsuranceGeneral</a>
+    <button class="big fb" id="fbBtn">FOLLOW US ON FACEBOOK ↗</button>
+    <div class="fb-confirm" id="fbConfirm" hidden>
+      <p class="confirm-q">HAVE YOU FOLLOWED SLIC GENERAL?</p>
+      <button class="big gold" id="toQuiz">YES, I'VE FOLLOWED — CONTINUE!</button>
+    </div>
+    <p class="tiny" id="fbTiny">Opens in a new tab. Your game is saved – come back here to continue.</p>
+  </section>
+
+  <!-- 4. SERVICE AWARENESS CHALLENGE -->
+  <section class="ov quiz" id="quizOv">
+    <span class="eyebrow">SERVICE AWARENESS CHALLENGE</span>
+    <h2 class="flow-title quiz-title">HOW WELL DO YOU KNOW <em>SLIC GENERAL?</em></h2>
+    <p class="sub quiz-sub">5 quick questions. Discover more about the services that make your journey easier!</p>
+    <div class="quiz-progress" aria-hidden="true"><i id="quizBar"></i></div>
+    <div class="quiz-card" id="quizCard" aria-live="polite">
+      <div class="quiz-head"><span class="quiz-num" id="quizNum">01</span><span class="quiz-of" id="quizOf">QUESTION 1 OF 5</span></div>
+      <div class="quiz-icon" id="quizIcon" aria-hidden="true"></div>
+      <span class="quiz-service" id="quizService"></span>
+      <p class="quiz-q" id="quizQ"></p>
+      <div class="quiz-choices" role="radiogroup" aria-label="Your answer">
+        <button type="button" class="choice yes" id="ansYes" role="radio" aria-checked="false"><b>✓</b> YES</button>
+        <button type="button" class="choice no" id="ansNo" role="radio" aria-checked="true"><b>✕</b> NO</button>
+      </div>
+    </div>
+    <button class="big gold" id="quizNext">NEXT QUESTION →</button>
+  </section>
+
+  <!-- 5a. WINNER (5/5 YES) -->
+  <section class="ov celebrate win" id="winOv">
+    <div class="trophy" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="tg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c2"/><stop offset=".45" stop-color="#ffce69"/><stop offset="1" stop-color="#b48420"/></linearGradient></defs><path d="M36 18h48v28c0 22-48 22-48 0z" fill="url(#tg2)"/><path d="M36 26H20v12c0 12 10 18 20 18M84 26h16v12c0 12-10 18-20 18" fill="none" stroke="url(#tg2)" stroke-width="6"/><rect x="55" y="62" width="10" height="20" fill="url(#tg2)"/><rect x="38" y="84" width="44" height="10" rx="3" fill="url(#tg2)"/><rect x="32" y="94" width="56" height="10" rx="3" fill="#00adb8"/></svg></div>
+    <span class="eyebrow">SLIC MOTOR SHOW 2026</span>
+    <h2 class="flow-title">CONGRATULATIONS!<br><em>YOU'RE A WINNER! 🏆</em></h2>
+    <p class="sub strong">Fantastic! You already know about all five SLIC General services!</p>
+    <dl class="result-meta">
+      <div class="wide"><dt>NAME</dt><dd id="winName"></dd></div>
+      <div><dt>DRIVING SCORE</dt><dd id="winScore"></dd></div>
+      <div><dt>AWARENESS</dt><dd class="gold-text">5 / 5</dd></div>
+    </dl>
+    <p class="collect">SHOW THIS WINNER SCREEN TO OUR SLIC GENERAL STALL ASSISTANT TO COLLECT YOUR GIFT!</p>
+    <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW HALL OF FAME 🏆</button></div>
+  </section>
+
+  <!-- 5b. THANK YOU (one or more NO) -->
+  <section class="ov" id="thanksOv">
+    <span class="eyebrow">SERVICE AWARENESS CHALLENGE</span>
+    <h2 class="flow-title">THANK YOU FOR <em>TAKING THE CHALLENGE!</em></h2>
+    <p class="sub">Every journey is a chance to discover something new. You've just learned more about how SLIC General can support you!</p>
+    <dl class="result-meta">
+      <div class="wide"><dt>NAME</dt><dd id="thName"></dd></div>
+      <div><dt>DRIVING SCORE</dt><dd id="thScore"></dd></div>
+      <div><dt>SERVICES YOU KNEW</dt><dd id="thKnown"></dd></div>
+    </dl>
+    <p class="result-label">DISCOVER MORE ABOUT</p>
+    <ul class="discover-list" id="thList"></ul>
+    <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW HALL OF FAME 🏆</button></div>
+  </section>
+  <!-- INTERRUPTED -->
+  <section class="ov" id="endedOv">
+    <img class="logo-big" src="assets/logo.png" alt="SLIC General">
+    <span class="eyebrow">PARTICIPATION ENDED</span>
+    <h2 class="flow-title">THANK YOU FOR<br><em>JOINING US!</em></h2>
+    <p class="sub">Your challenge attempt was interrupted before it finished, so it has ended. Each player has one attempt.</p>
+    <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW HALL OF FAME 🏆</button></div>
+  </section>
+
+  <!-- HALL OF FAME -->
+  <section class="ov hof" id="boardOv">
+    <a class="hof-home" href="index.html" aria-label="Back to the SLIC Motor Show website"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h5v-6h3v6h5V10"/></svg></a>
+    <div class="hof-crest" aria-hidden="true">🏆</div>
+    <span class="eyebrow">SLIC MOTOR SHOW 2026</span>
+    <h2 class="flow-title">HALL OF <em>FAME</em></h2>
+    <p class="hof-key"><span class="hof-cup">🏆</span> = 5/5 awareness winner</p>
+    <div class="board ranked hof-board" id="board"></div>
+    <div class="after-actions"><button class="big teal" id="boardBack">← BACK TO MY RESULT</button><a class="big explore" href="index.html#products">EXPLORE SLIC MOTOR INSURANCE →</a></div>
+    <p class="tiny">Results played on this phone only – not shared across phones. Mobile numbers are never shown.</p>
+  </section>
+
+  <canvas class="confetti" id="confetti"></canvas>
+</div>
+<script src="assets/config.js"></script>
+<script src="assets/game-store.js"></script>
+<script src="assets/game.js"></script>
+</body></html>
