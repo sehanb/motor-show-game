@@ -11,3 +11,7 @@ window.SLIC_CONFIG = { gameUrl: '', allowMultipleGameAttempts: true };
    Product keys: motor-plus, motor-ev, rider, tuk, commercial, ladies-only, pinnacle, drive-60. */
 window.SLIC_CONFIG.kioskIdleTimeoutSeconds = 60;
 window.SLIC_CONFIG.kioskProductUrls = {};
+window.SLIC_CONFIG.googleSheets = {
+  enabled: true,
+  webAppUrl: "https://script.google.com/macros/s/AKfycbyPx3TtgmuSK14TZef6MbBjveIqnfR74cga-HiPcRjqLJrNuAkt2L9SVmbciLhBedj7WA/exec"
+};

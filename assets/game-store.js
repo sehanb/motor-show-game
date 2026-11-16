@@ -1,4 +1,6 @@
-/* SLIC Motor Show 2026 – participation storage (PROTOTYPE: this browser only).
+/* SLIC Motor Show 2026 – local copy of the current attempt on this browser.
+   The official record is the Google Sheet (via assets/game-api.js); this copy only lets the
+   page resume after a reload and powers the on-phone Hall of Fame.
    Every read/write of player data goes through this module, so a central service
    (e.g. Google Sheets or an API) can replace it later without touching the game.
    NOTE: localStorage limits one attempt per browser only. It does not stop a second attempt
@@ -64,13 +66,15 @@
 
     hasPlayed: function (mobile) { return read(KEYS.players, []).indexOf(mobile) >= 0; },
 
-    register: function (name, mobile) {
+    /* playerId: the ID returned by the Google Sheets API (a local demo ID only when the API is disabled). */
+    register: function (name, mobile, playerId) {
       var rec = {
-        playerId: nextPlayerId(), name: name, mobile: mobile, registeredAt: nowSL(),
+        playerId: playerId || nextPlayerId(), name: name, mobile: mobile, registeredAt: nowSL(),
         gameStarted: false, gameCompleted: false, status: 'REGISTERED', score: null,
         eligible: false, facebookVisited: false, followConfirmed: false,
         awarenessAnswers: null, awarenessScore: null, awarenessCompleted: false, isWinner: false,
-        playedAt: null, awarenessCompletedAt: null
+        playedAt: null, awarenessCompletedAt: null,
+        scoreSaved: false, pendingAnswers: null
       };
       write(KEYS.player, rec);
       var list = read(KEYS.players, []);
