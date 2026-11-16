@@ -28,9 +28,9 @@
       <div class="field"><label for="pname">YOUR NAME</label><input id="pname" maxlength="40" autocomplete="name" placeholder="e.g. Kasun Perera" required></div>
       <div class="field"><label for="pphone">SRI LANKAN MOBILE NUMBER</label><input id="pphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="07X XXX XXXX" required></div>
       <div class="err" id="err" aria-live="polite"></div>
-      <button class="big" type="submit">START MY CHALLENGE →</button>
+      <button class="big" id="regBtn" type="submit">START MY CHALLENGE →</button>
     </form>
-    <p class="tiny">One attempt per player. Your details stay on this phone only and are not sent anywhere. Your number is never shown on the leaderboard.</p>
+    <p class="tiny">Your name and mobile number are sent securely to SLIC General for this event only. Your number is never shown on the leaderboard.</p>
   </section>
 
   <!-- COUNTDOWN / PAUSE -->
@@ -144,9 +144,20 @@
     <p class="tiny">Results played on this phone only – not shared across phones. Mobile numbers are never shown.</p>
   </section>
 
+  <!-- SAVING (API in progress / failed) -->
+  <section class="ov save-ov" id="saveOv" aria-live="polite">
+    <div class="save-spin" aria-hidden="true"></div>
+    <span class="eyebrow">SLIC MOTOR SHOW 2026</span>
+    <h2 class="flow-title" id="saveTitle">SAVING…</h2>
+    <p class="sub" id="saveMsg"></p>
+    <p class="err" id="saveErr"></p>
+    <button class="big gold" id="saveRetry" type="button">TRY AGAIN →</button>
+  </section>
+
   <canvas class="confetti" id="confetti"></canvas>
 </div>
 <script src="assets/config.js"></script>
 <script src="assets/game-store.js"></script>
+<script src="assets/game-api.js"></script>
 <script src="assets/game.js"></script>
 </body></html>

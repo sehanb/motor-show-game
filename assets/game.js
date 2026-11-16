@@ -15,6 +15,9 @@
   };
   // Testing Mode, from assets/config.js. Only the literal boolean true enables it; anything else = false.
   const MULTI_ATTEMPTS = !!(window.SLIC_CONFIG && window.SLIC_CONFIG.allowMultipleGameAttempts === true);
+  // Google Sheets API (assets/game-api.js). When disabled in config.js the game runs on this phone only.
+  const Api = window.SlicApi;
+  const ONLINE = !!(Api && Api.enabled);
 
   // Service Awareness Challenge – edit service names, questions and follow-up text here.
   // These are awareness questions: YES = the customer already knew about the service.
@@ -95,7 +98,7 @@
   setMuted(muted);
 
   // ================= SCREENS =================
-  const OVS = ['reg', 'countOv', 'pauseOv', 'eligibleOv', 'doneOv', 'fbOv', 'quizOv', 'winOv', 'thanksOv', 'endedOv', 'boardOv'];
+  const OVS = ['reg', 'countOv', 'pauseOv', 'eligibleOv', 'doneOv', 'fbOv', 'quizOv', 'winOv', 'thanksOv', 'endedOv', 'boardOv', 'saveOv'];
   let screen = 'reg';
   function show(id) {
     screen = id || 'playing';
@@ -116,9 +119,32 @@
       parts: [], texts: [], tilt: 0, running: false, flash: 0 };
   }
 
+  // ================= SAVING STATE =================
+  // Friendly loading screen while the API saves; on failure it says plainly that nothing was saved and offers a retry.
+  let saveRetry = null;
+  function saving(title, msg) {
+    saveRetry = null;
+    $('saveOv').classList.remove('failed');
+    $('saveTitle').textContent = title;
+    $('saveMsg').textContent = msg;
+    $('saveErr').textContent = '';
+    show('saveOv');
+  }
+  function saveFailed(message, retry) {
+    saveRetry = retry;
+    $('saveOv').classList.add('failed');
+    $('saveTitle').textContent = 'NOT SAVED YET';
+    $('saveMsg').textContent = 'Your result has not been saved. Please check your connection and try again.';
+    $('saveErr').textContent = message;
+    show('saveOv');
+  }
+  $('saveRetry').onclick = () => { const f = saveRetry; saveRetry = null; if (f) f(); };
+
   // ================= REGISTRATION =================
+  let registering = false;
   $('regForm').onsubmit = (e) => {
     e.preventDefault();
+    if (registering) return;
     const name = Store.cleanName($('pname').value);
     const mobile = Store.normaliseMobile($('pphone').value);
     if (!name) return ($('err').textContent = 'Please enter your name (letters only, 2–40 characters).');
@@ -129,20 +155,33 @@
     if (Store.hasPlayed(mobile) && !(cur && cur.mobile === mobile && cur.status === 'REGISTERED')) {
       return ($('err').textContent = 'You have already participated in the SLIC Motor Show Challenge. Thank you for joining us!');
     }
+    if (!(cur && cur.mobile === mobile && cur.status === 'REGISTERED')) return registerPlayer(name, mobile);
     $('err').textContent = '';
-    if (!(cur && cur.mobile === mobile && cur.status === 'REGISTERED')) Store.register(name, mobile);
-    else Store.update({ name });
+    Store.update({ name });
     if (document.activeElement) document.activeElement.blur();
     countdown();
   };
   // Testing Mode registration: always a brand-new session (new ID, score, Facebook step, eligibility and awareness challenge).
   // Hall of Fame entries from earlier sessions are kept because they live in a separate store.
-  function registerTestingSession(name, mobile) {
+  function registerTestingSession(name, mobile) { registerPlayer(name, mobile); }
+
+  // Every registration creates a new Google Sheets row and returns its playerId for this attempt.
+  // The game only starts once the server has confirmed the registration.
+  function registerPlayer(name, mobile) {
     $('err').textContent = '';
-    Store.register(name, mobile);
     if (document.activeElement) document.activeElement.blur();
-    countdown();
-  };
+    if (!ONLINE) { Store.register(name, mobile); return countdown(); }
+    registering = true; $('regBtn').disabled = true;
+    saving('REGISTERING…', 'Getting your starting grid ready. This only takes a moment.');
+    Api.registerPlayer(name, mobile).then((res) => {
+      if (typeof res.playerId !== 'string' || !res.playerId) throw new Error('Unexpected server response.');
+      Store.register(name, mobile, res.playerId);
+      countdown();
+    }).catch((err) => {
+      show('reg');
+      $('err').textContent = 'Registration was not saved. ' + err.message + ' Please try again.';
+    }).then(() => { registering = false; $('regBtn').disabled = false; });
+  }
 
   // ================= START / PAUSE =================
   function countdown() {
@@ -533,9 +572,20 @@
     S.running = false; cancelAnimationFrame(raf); playing(false);
     const score = Math.floor(S.score);
     const eligible = score > CONFIG.eligibilityThreshold;
-    const rec = Store.update({ status: 'COMPLETED', gameCompleted: true, score, shields: S.shields, coins: S.coins, dodged: S.dodged, eligible });
-    Store.addScore(rec);
-    route(rec, true);
+    const rec = Store.update({ status: 'COMPLETED', gameCompleted: true, score, shields: S.shields, coins: S.coins, dodged: S.dodged, eligible, scoreSaved: !ONLINE });
+    if (!ONLINE) { Store.addScore(rec); return route(rec, true); }
+    saveScore(true);
+  }
+  // Results are only shown once the server has confirmed the score.
+  function saveScore(fresh) {
+    const rec = Store.current();
+    if (!rec) return show('reg');
+    saving('SAVING YOUR SCORE…', 'Great drive! Hold tight while we record your result.');
+    Api.updateGameScore(rec.playerId, rec.score).then((res) => {
+      const saved = Store.update({ scoreSaved: true, eligible: typeof res.eligible === 'boolean' ? res.eligible : rec.eligible });
+      Store.addScore(saved);
+      route(saved, fresh);
+    }).catch((err) => saveFailed(err.message, () => saveScore(fresh)));
   }
 
   // Decide which screen a saved record belongs on (also used when the page is reopened).
@@ -550,6 +600,7 @@
       return show('endedOv');
     }
     // COMPLETED
+    if (ONLINE && rec.scoreSaved === false) return saveScore(false);
     if (!rec.eligible) {
       $('stShield').textContent = rec.shields || 0; $('stCoin').textContent = rec.coins || 0; $('stDodge').textContent = rec.dodged || 0;
       show('doneOv');
@@ -558,6 +609,7 @@
       return;
     }
     if (rec.awarenessCompleted) return showResult(rec, false);
+    if (Array.isArray(rec.pendingAnswers)) return submitChallenge(false);
     if (rec.followConfirmed) return openQuiz();
     show('eligibleOv');
     if (fresh) { countUp($('eligScore'), rec.score); sfx.fanfare(); buzz([40, 30, 40, 30, 120]); confetti(); }
@@ -624,14 +676,35 @@
   $('quizNext').onclick = () => {
     if (screen !== 'quizOv') return;
     if (qIndex < AWARENESS_QUESTIONS.length - 1) { qIndex++; tone(660, 0.06); renderQuestion(true); return; }
-    const isWinner = answers.every((answer) => answer === true);
-    const saved = Store.update({
-      awarenessAnswers: answers.slice(), awarenessScore: answers.filter(Boolean).length,
-      awarenessCompleted: true, isWinner, awarenessCompletedAt: Store.nowSL()
-    });
-    if (isWinner) Store.markWinner(saved.playerId);
-    showResult(saved, true);
+    Store.update({ pendingAnswers: answers.slice() });
+    submitChallenge(true);
   };
+  // Sends the five answers; the result screen uses the awareness score and winner status returned by the server.
+  function submitChallenge(fresh) {
+    const rec = Store.current();
+    if (!rec || !Array.isArray(rec.pendingAnswers)) return route(rec);
+    const a = rec.pendingAnswers.slice();
+    const finalise = (awarenessScore, isWinner) => {
+      const saved = Store.update({
+        awarenessAnswers: a, awarenessScore, awarenessCompleted: true, isWinner,
+        awarenessCompletedAt: Store.nowSL(), pendingAnswers: null
+      });
+      if (isWinner) Store.markWinner(saved.playerId);
+      showResult(saved, fresh);
+    };
+    const local = () => finalise(a.filter(Boolean).length, a.every((x) => x === true));
+    if (!ONLINE) return local();
+    saving('CHECKING YOUR ANSWERS…', 'Saving your Service Awareness Challenge result.');
+    Api.completeChallenge(rec.playerId, rec.followConfirmed === true, a).then((res) => {
+      const n = Number(res.awarenessScore);
+      if (!Number.isFinite(n) || typeof res.winner !== 'boolean') throw new Error('Unexpected server response.');
+      finalise(n, res.winner);
+    }).catch((err) => {
+      // Retry after a lost response: the server already stored these exact answers for this playerId.
+      if (err.server && /already completed/i.test(err.message)) return local();
+      saveFailed(err.message, () => submitChallenge(fresh));
+    });
+  }
   // ================= RESULTS =================
   function showResult(rec, fresh) {
     const score = (rec.score || 0).toLocaleString();
@@ -705,7 +778,9 @@
     const prev = Store.current();
     if (prev && prev.status === 'IN_PROGRESS') Store.update({ status: 'INTERRUPTED' });
     $('pname').value = ''; $('pphone').value = '';
-    show('reg');
+    // Finish any save that was cut off (e.g. page reloaded while offline) before allowing a new registration.
+    if (ONLINE && prev && prev.status === 'COMPLETED' && (prev.scoreSaved === false || Array.isArray(prev.pendingAnswers))) route(prev, false);
+    else show('reg');
   } else {
     route(Store.current(), false);
   }
