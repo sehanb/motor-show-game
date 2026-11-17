@@ -6,7 +6,6 @@ Created with the built-in `image_gen` tool for this kiosk. The image depicts a *
 
 Saved files:
 
-- `images/kiosk-colombo-concept-master.png`: native generated source, 941 × 1672.
 - `images/kiosk-colombo-concept.webp`: optimized native-size WebP.
 - `images/kiosk-colombo-concept-small.webp`: 900-pixel-wide optimized version.
 - `images/kiosk-colombo-concept-4k.webp`: 2160 × 3840 display derivative, resampled from the native source using Lanczos3. This is not a native 4K generation.
