@@ -1,4 +1,4 @@
-/* SLIC Motor Show 2026 – local copy of the current attempt on this browser.
+/* SLIC General Motor Game – local copy of the current attempt on this browser.
    The official record is the Google Sheet (via assets/game-api.js); this copy only lets the
    page resume after a reload and powers the on-phone Hall of Fame.
    Every read/write of player data goes through this module, so a central service

@@ -1,5 +1,5 @@
 /**
- * SLIC Motor Show 2026 – password-protected player records for playerrecords.html.
+ * SLIC General Motor Game – password-protected player records for playerrecords.html.
  * Add this file to the EXISTING Apps Script project (File › + › Script, name it StaffRecords).
  *
  * Action (POST body JSON, same endpoint as the game):

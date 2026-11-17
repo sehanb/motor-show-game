@@ -1,4 +1,4 @@
-/* SLIC Motor Show 2026 – Google Apps Script API client.
+/* SLIC General Motor Game – Google Apps Script API client.
    Endpoint: SLIC_CONFIG.googleSheets.webAppUrl (assets/config.js).
 
    Cross-origin notes (tested against the deployed web app):

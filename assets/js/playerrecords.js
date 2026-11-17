@@ -1,4 +1,4 @@
-/* SLIC Motor Show 2026 – staff player records dashboard.
+/* SLIC General Motor Game – staff player records dashboard.
    Data comes only from the Apps Script API (getPlayerRecords), which requires the staff password,
    checked server-side against the STAFF_PASSWORD Script Property. The password is not stored in this file.
    Requests are CORS "simple" (POST, text/plain, no custom headers, no cookies) so Apps Script needs no preflight. */

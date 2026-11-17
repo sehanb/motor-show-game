@@ -1,10 +1,10 @@
 # SLIC Motor Fest 2026
 
-A static HTML5 campaign and mobile driving challenge. No application build or backend is required. Serve this folder with an HTTP server; `index.html` is the campaign and `game.html` is the mobile game.
+A static HTML5 campaign and mobile driving challenge. No application build or backend is required. Serve this folder with an HTTP server; `index.html` is the campaign and `motorshow2026.html` is the mobile game (served at `/motorshow2026`).
 
 ## QR and hosting
 
-On a hosted site, QR codes automatically open `game.html` on the current origin. An optional **permanent** game URL can be set in [assets/config.js](assets/config.js). Temporary tunnel URLs do not belong in deployment source.
+On a hosted site, QR codes automatically open `/motorshow2026` on the current origin. An optional **permanent** game URL can be set in [assets/config.js](assets/config.js). Temporary tunnel URLs do not belong in deployment source.
 
 For this machine's local preview, the ignored `assets/preview.local.json` supplies the active public origin so QR scanning works when the campaign is opened on localhost. The tunnel and local server must remain running. This preview file and the `.preview/` tools are excluded from Git and are not needed for IIS hosting.
 

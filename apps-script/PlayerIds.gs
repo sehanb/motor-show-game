@@ -1,5 +1,5 @@
 /**
- * SLIC Motor Show 2026 – short Player IDs (SLIC-001, SLIC-002, …) with a hidden access key.
+ * SLIC General Motor Game – short Player IDs (SLIC-001, SLIC-002, …) with a hidden access key.
  * Add this file to the Apps Script project (File › + › Script, name it PlayerIds).
  *
  * Short IDs are guessable, so each registration also gets a random Access Key (column K of

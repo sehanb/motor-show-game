@@ -1,4 +1,4 @@
-/* SLIC Motor Show 2026 – mobile driving challenge + service awareness flow (static prototype).
+/* SLIC General Motor Game – mobile driving challenge + service awareness flow (static prototype).
    Flow: REGISTER → PLAY ONCE → SCORE → (score > 1,000) FACEBOOK → SERVICE AWARENESS CHALLENGE → RESULT → ALL WINNERS
    All participation data goes through window.SlicStore (assets/game-store.js). */
 (() => {
@@ -19,20 +19,31 @@
   const Api = window.SlicApi;
   const ONLINE = !!(Api && Api.enabled);
 
-  // Service Awareness Challenge – edit service names, questions and follow-up text here.
-  // These are awareness questions: YES = the customer already knew about the service.
-  // Confirm every description with SLIC General before the event.
+  // SLIC General – Digital Services Awareness Quiz. Edit questions, options and correct answers here.
+  // `correct` is the index of the right option. The API receives one boolean per question
+  // (true = answered correctly); 5/5 correct = winner.
+  const TF = ['True', 'False'];
   const AWARENESS_QUESTIONS = [
-    { service: 'Virtual Inspection', icon: '📱', question: 'Did you know SLIC General offers a Virtual Inspection service?',
-      more: 'Ask our team how a virtual inspection can save you time.' },
-    { service: 'Cashless Repair', icon: '🔧', question: 'Did you know SLIC General offers a Cashless Repair Facility?',
-      more: 'Find out how cashless repairs can make getting back on the road easier.' },
-    { service: 'Fast Claim Settlement', icon: '⚡', question: 'Did you know SLIC General provides fast claim settlement services?',
-      more: 'Learn how our claims team works to settle your claim quickly.' },
-    { service: 'Online Policy Renewal', icon: '💻', question: 'Did you know you can renew eligible SLIC General insurance policies online?',
-      more: 'Discover how to renew eligible policies online, anytime.' },
-    { service: 'Motor Claims Assistance', icon: '🤝', question: 'Did you know SLIC General provides assistance and guidance throughout the motor claims process?',
-      more: 'See how we guide you through every step of a motor claim.' },
+    { service: 'Bee Express – Quick Claim Settlement', icon: '🐝',
+      question: 'Bee Express offers a faster and more convenient way to settle your motor claims.',
+      options: TF, correct: 0,
+      more: 'Bee Express gives you a faster, more convenient way to settle your motor claims.' },
+    { service: 'AI-Powered BeeChat Assistant', icon: '🤖',
+      question: 'SLIC General introduced Sri Lanka’s first trilingual AI-powered chatbot, BeeChat, allowing customers to access claim updates anytime, anywhere through their mobile phones.',
+      options: TF, correct: 0,
+      more: 'BeeChat is Sri Lanka’s first trilingual AI-powered chatbot – get claim updates anytime, anywhere on your phone.' },
+    { service: 'BeeChat – Customer Assistance', icon: '💬',
+      question: 'You can use BeeChat to get assistance with your general insurance-related inquiries anytime.',
+      options: TF, correct: 0,
+      more: 'Ask BeeChat about your general insurance inquiries, any time of day.' },
+    { service: 'Virtual Motor Claim Office', icon: '🏢',
+      question: 'What services can you access through the SLIC General Virtual Motor Claim Office?',
+      options: ['A. Upload claim-related documents.', 'B. Connect with a claim officer for assistance.', 'C. Receive claim payments directly to your bank account.', 'D. All of the above.'], correct: 3,
+      more: 'The Virtual Motor Claim Office lets you upload documents, talk to a claim officer and receive payments to your bank account.' },
+    { service: 'Virtual Vehicle Inspection', icon: '📱',
+      question: 'You can get your vehicle inspected remotely through a simple web link on your mobile phone.',
+      options: TF, correct: 0,
+      more: 'Get your vehicle inspected remotely through a simple web link on your mobile phone.' },
   ];
   // ================= CANVAS =================
   const stage = $('stage'), cv = $('cv'), ctx = cv.getContext('2d');
@@ -115,7 +126,7 @@
   let S = null, raf = 0, last = 0, paused = false;
   function newState() {
     return { t: 0, score: 0, lane: 1, x: laneX(1), items: [], side: [], spawn: 0.6, scroll: 0,
-      shields: 0, coins: 0, dodged: 0, crashes: 0, protect: 0, inv: 0, shake: 0, combo: 0, comboT: 0,
+      shields: 0, coins: 0, dodged: 0, crashes: 0, protect: 0, inv: 0, stun: 0, shake: 0, combo: 0, comboT: 0,
       parts: [], texts: [], tilt: 0, running: false, flash: 0 };
   }
 
@@ -171,16 +182,25 @@
     $('err').textContent = '';
     if (document.activeElement) document.activeElement.blur();
     if (!ONLINE) { Store.register(name, mobile); return countdown(); }
-    registering = true; $('regBtn').disabled = true;
-    saving('REGISTERING…', 'Getting your starting grid ready. This only takes a moment.');
+    // Stay on the registration screen while saving (no flash of the road behind it).
+    setRegBusy(true);
     Api.registerPlayer(name, mobile).then((res) => {
       if (typeof res.playerId !== 'string' || !res.playerId) throw new Error('Unexpected server response.');
       Store.register(name, mobile, res.playerId, typeof res.accessKey === 'string' ? res.accessKey : null);
+      setRegBusy(false);
       countdown();
     }).catch((err) => {
-      show('reg');
+      setRegBusy(false);
       $('err').textContent = 'Registration was not saved. ' + err.message + ' Please try again.';
-    }).then(() => { registering = false; $('regBtn').disabled = false; });
+    });
+  }
+  function setRegBusy(on) {
+    registering = on;
+    const btn = $('regBtn');
+    if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.disabled = on; btn.classList.toggle('busy', on);
+    btn.textContent = on ? 'REGISTERING…' : btn.dataset.label;
+    $('pname').disabled = on; $('pphone').disabled = on;
   }
 
   // ================= START / PAUSE =================
@@ -234,23 +254,30 @@
 
   // ================= WORLD =================
   const HUES = ['#8a96a3', '#5b6b78', '#c9ced3', '#6d4fa1', '#2f5b8c', '#b23a3a', '#3b3f45'];
+  // SLIC General motor insurance perks shown when a gold shield is collected.
+  const PERKS = ['CASHLESS REPAIR', 'CLAIMS 24/7', 'VIRTUAL INSPECTION', 'ONLINE RENEWAL', 'FAST CLAIM SETTLEMENT', 'ISLANDWIDE ASSISTANCE'];
   function seedSide() { S.side = []; for (let y = -H; y < H * 1.2; y += H * 0.3) addSide(y); }
   function addSide(y) {
     const left = S.side.length % 2 === 0;
     const r = Math.random();
-    S.side.push({ y, left, kind: r < 0.35 ? 'board' : r < 0.55 ? 'lamp' : 'palm', r: 0.75 + Math.random() * 0.45 });
+    // Right-hand verge alternates SLIC logo boards with SLIC service signs.
+    S.side.push({ y, left, kind: r < 0.22 ? 'board' : r < 0.4 ? 'sign' : r < 0.58 ? 'lamp' : 'palm', r: 0.75 + Math.random() * 0.45, sign: (Math.random() * SIGNS.length) | 0 });
   }
-  function speed() { return H * (0.62 + Math.min(S.t / CONFIG.duration, 1) * 0.65); }
+  const SIGNS = [['SLIC', 'CLAIMS 24/7'], ['DRIVE', 'SAFE'], ['SLIC', 'MOTOR+'], ['CASHLESS', 'REPAIR']];
+  // Constant speed for the whole 30 seconds, so every player gets the same road.
+  function speed() { return H * 0.9; }
 
-  function vehicleKind() { const r = Math.random(); return r < 0.45 ? 'sedan' : r < 0.65 ? 'tuk' : r < 0.82 ? 'bike' : 'van'; }
+  // Sri Lankan traffic mix: cars, tuk-tuks, motorbikes, vans and red buses.
+  function vehicleKind() { const r = Math.random(); return r < 0.38 ? 'sedan' : r < 0.58 ? 'tuk' : r < 0.74 ? 'bike' : r < 0.88 ? 'van' : 'bus'; }
   function spawn() {
     const r = Math.random(), lane = (Math.random() * 3) | 0;
-    const busy = S.items.filter((it) => it.y < H * 0.12).map((it) => it.lane);
+    const busy = S.items.filter((it) => it.y < H * 0.2).map((it) => it.lane);
     if (busy.includes(lane)) return;
-    const type = r < 0.40 ? 'car' : r < 0.50 ? 'cone' : r < 0.58 ? 'flood' : r < 0.62 ? 'hole' : r < 0.88 ? 'shield' : 'coin';
-    const mk = (t, l) => ({ type: t, lane: l, y: -H * 0.12, hue: HUES[(Math.random() * HUES.length) | 0], kind: t === 'car' ? vehicleKind() : (Math.random() < 0.5 ? 'barrier' : 'cone'), hit: false, passed: false, ph: Math.random() * 6 });
+    // ~40% of spawns are shields (28% teal +100, 12% gold +200); the rest are traffic and road hazards.
+    const type = r < 0.40 ? 'car' : r < 0.48 ? 'cone' : r < 0.54 ? 'flood' : r < 0.60 ? 'hole' : r < 0.88 ? 'shield' : 'gold';
+    const mk = (t, l) => ({ type: t, lane: l, y: -H * 0.16, hue: HUES[(Math.random() * HUES.length) | 0], kind: t === 'car' ? vehicleKind() : (Math.random() < 0.5 ? 'barrier' : 'cone'), hit: false, passed: false, ph: Math.random() * 6 });
     S.items.push(mk(type, lane));
-    if ((type === 'car' || type === 'cone') && Math.random() < 0.25 + S.t / 120) {
+    if ((type === 'car' || type === 'cone') && Math.random() < 0.3) {
       const other = [0, 1, 2].filter((l) => l !== lane && !busy.includes(l));
       if (other.length === 2) S.items.push(mk('car', other[(Math.random() * 2) | 0]));
     }
@@ -283,14 +310,14 @@
     const left = Math.max(0, CONFIG.duration - S.t);
     if (left <= 0) return finish();
     S.scroll = (S.scroll + sp * dt) % 480; // 480 = common multiple of the 40/80 px markings and 96 px asphalt tile
-    S.score += dt * 20; // distance points
+    // Points come ONLY from shields: teal +100, gold +200.
     S.x += (laneX(S.lane) - S.x) * Math.min(1, dt * 16);
     S.tilt *= 0.85;
-    S.inv = Math.max(0, S.inv - dt); S.shake = Math.max(0, S.shake - dt); S.flash = Math.max(0, S.flash - dt);
-    S.comboT -= dt; if (S.comboT <= 0) S.combo = 0;
+    if (S.stun > 0) S.tilt = Math.sin(S.t * 40) * 0.25; // spin-out wobble after a crash
+    S.inv = Math.max(0, S.inv - dt); S.stun = Math.max(0, (S.stun || 0) - dt); S.shake = Math.max(0, S.shake - dt); S.flash = Math.max(0, S.flash - dt);
 
     S.spawn -= dt;
-    if (S.spawn <= 0) { spawn(); S.spawn = Math.max(0.32, 0.62 - S.t * 0.01) * (0.8 + Math.random() * 0.4); }
+    if (S.spawn <= 0) { spawn(); S.spawn = 0.5 * (0.8 + Math.random() * 0.4); } // steady spawn rate
 
     for (const s of S.side) s.y += sp * dt;
     S.side = S.side.filter((s) => s.y < H + 120);
@@ -298,37 +325,41 @@
 
     const pw = g.carW, ph = g.carH;
     for (const it of S.items) {
-      const v = it.type === 'car' ? sp * (it.kind === 'bike' ? 0.66 : 0.72) : sp;
+      const v = it.type === 'car' ? sp * (it.kind === 'bike' ? 0.66 : it.kind === 'bus' ? 0.6 : 0.72) : sp;
       it.y += v * dt; it.ph += dt * 4;
       if (it.hit) continue;
       const ix = laneX(it.lane);
-      const size = it.type === 'car' ? [it.kind === 'bike' ? pw * 0.55 : pw, ph] : [g.laneW * 0.42, g.laneW * 0.42];
+      const pickup = it.type === 'shield' || it.type === 'gold';
+      const size = it.type === 'car' ? [it.kind === 'bike' ? pw * 0.55 : pw, it.kind === 'bus' ? ph * 1.6 : ph] : [g.laneW * 0.42, g.laneW * 0.42];
       const overlap = Math.abs(ix - S.x) < (pw + size[0]) / 2 * 0.8 && Math.abs(it.y - g.py) < (ph + size[1]) / 2 * 0.8;
-      if (overlap) {
+      if (overlap && pickup && S.stun > 0) {
+        // still spinning out after a crash – the shield slips past
+      } else if (overlap) {
         it.hit = true;
         if (it.type === 'shield') {
-          S.shields++; S.combo++; S.comboT = 2.5; S.protect = 1;
-          const m = Math.min(4, 1 + Math.floor(S.combo / 3));
-          addScore(100 * m, ix, it.y, '#4fe3dc'); burst(ix, it.y, '#4fe3dc'); sfx.shield(); buzz(15);
-        } else if (it.type === 'coin') {
-          S.coins++; S.combo++; S.comboT = 2.5;
-          addScore(250, ix, it.y, '#ffce69'); burst(ix, it.y, '#ffce69', 20); sfx.coin(); buzz(20);
+          S.shields++; S.protect = 1;
+          addScore(100, ix, it.y, '#4fe3dc'); burst(ix, it.y, '#4fe3dc'); sfx.shield(); buzz(15);
+        } else if (it.type === 'gold') {
+          S.shields++; S.coins++; S.protect = 1; // coins = gold shields collected
+          addScore(200, ix, it.y, '#ffce69'); burst(ix, it.y, '#ffce69', 22); sfx.coin(); buzz(20);
+          S.texts.push({ x: ix, y: it.y - 28, txt: PERKS[S.coins % PERKS.length], color: '#ffffff', life: 1.1, small: true });
         } else if (S.inv > 0) {
           // recovering – pass through
         } else if (S.protect) {
           S.protect = 0; S.inv = 0.8; burst(ix, it.y, '#4fe3dc', 24);
           S.texts.push({ x: S.x, y: g.py - ph, txt: 'SLIC PROTECTED!', color: '#4fe3dc', life: 1.2 }); sfx.block();
         } else {
-          S.crashes++; S.combo = 0; S.inv = 1.2; S.shake = 0.4; S.flash = 0.35;
-          addScore(-150, S.x, g.py - ph / 2, '#ed4d60');
+          // No points lost – but the car spins out and can't collect shields for a moment.
+          S.crashes++; S.inv = 1.2; S.stun = 0.9; S.shake = 0.4; S.flash = 0.35;
+          S.texts.push({ x: S.x, y: g.py - ph, txt: 'CRASH!', color: '#ed4d60', life: 1 });
           if (it.type === 'flood') { burst(S.x, g.py, '#7fd3ff', 30, 260); sfx.splash(); }
           else { burst(S.x, g.py, '#ffb347', 26); sfx.crash(); }
         }
       } else if (!it.passed && it.y > g.py + ph / 2 && ['car', 'cone', 'hole', 'flood'].includes(it.type)) {
-        it.passed = true; S.dodged++; S.score += 25;
+        it.passed = true; S.dodged++;
       }
     }
-    S.items = S.items.filter((it) => it.y < H + 150 && !(it.hit && ['shield', 'coin'].includes(it.type)));
+    S.items = S.items.filter((it) => it.y < H + 220 && !(it.hit && (it.type === 'shield' || it.type === 'gold')));
     for (const p of S.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.94; p.vy *= 0.94; p.life -= dt; }
     S.parts = S.parts.filter((p) => p.life > 0);
     for (const t of S.texts) { t.y -= 60 * dt; t.life -= dt; }
@@ -342,9 +373,6 @@
     $('timefill').style.transform = `scaleX(${left / CONFIG.duration})`;
     $('score').textContent = Math.floor(S.score).toLocaleString();
     $('shields').textContent = '🛡 ' + S.shields;
-    const m = Math.min(4, 1 + Math.floor(S.combo / 3));
-    $('combo').textContent = `🔥 COMBO x${m}`;
-    $('combo').classList.toggle('on', m > 1);
   }
 
   // ================= DRAW =================
@@ -431,7 +459,20 @@
     ctx.fillStyle = '#ffe9a8'; ctx.beginPath(); ctx.arc(0, -h * 0.46, 3, 0, 7); ctx.fill();
     ctx.restore();
   }
+  // Sri Lankan red passenger bus (longer than other traffic)
+  function drawBus(x, y, w, h) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = '#0007'; rr(-w / 2 + 4, -h / 2 + 6, w, h, 8); ctx.fill();
+    ctx.fillStyle = '#111'; [[-1, -0.33], [1, -0.33], [-1, 0.3], [1, 0.3]].forEach(([sx, sy]) => { rr(sx * w / 2 - (sx > 0 ? w * 0.1 : 0) - w * 0.05, sy * h - h * 0.05, w * 0.15, h * 0.1, 3); ctx.fill(); });
+    ctx.fillStyle = '#b3202f'; rr(-w / 2, -h / 2, w, h, 8); ctx.fill();
+    ctx.fillStyle = '#f2c230'; ctx.fillRect(-w / 2, -h * 0.08, w, h * 0.05); ctx.fillRect(-w / 2, h * 0.22, w, h * 0.05);
+    ctx.fillStyle = '#ffffff30'; rr(-w * 0.36, -h * 0.34, w * 0.72, h * 0.2, 4); ctx.fill(); // roof hatch
+    ctx.fillStyle = '#0b1d26'; rr(-w * 0.42, -h * 0.48, w * 0.84, h * 0.09, 4); ctx.fill();
+    ctx.fillStyle = '#ffe9a8'; rr(-w * 0.44, -h * 0.5 + 1, w * 0.18, 4, 2); ctx.fill(); rr(w * 0.26, -h * 0.5 + 1, w * 0.18, 4, 2); ctx.fill();
+    ctx.restore();
+  }
   function drawVehicle(it, x, y, g) {
+    if (it.kind === 'bus') return drawBus(x, y, g.carW * 1.12, g.carH * 1.6);
     if (it.kind === 'tuk') drawTuk(x, y, g.carW, g.carH);
     else if (it.kind === 'bike') drawBike(x, y, g.carW, g.carH * 0.85, it.hue);
     else if (it.kind === 'van') drawVan(x, y, g.carW * 1.05, g.carH, it.hue);
@@ -473,8 +514,8 @@
     ctx.fillStyle = '#ffffffb8';
     for (let l = 1; l < 3; l++) for (let y = -80 + sc; y < H; y += 80) ctx.fillRect(g.verge + g.laneW * l - 2, y, 4, 44);
     // speed streaks late in the run
-    if (S && S.running && S.t > 15) {
-      ctx.strokeStyle = `rgba(255,255,255,${Math.min(0.18, (S.t - 15) / 60)})`; ctx.lineWidth = 1.5;
+    if (S && S.running) { // constant light speed streaks (speed no longer ramps up)
+      ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1.5;
       for (let i = 0; i < 6; i++) { const sx = g.verge + ((i * 97 + sc0 * 3) % g.roadW); const sy = (i * 173 + sc0 * 9) % H; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy + 50); ctx.stroke(); }
     }
 
@@ -486,6 +527,16 @@
           ctx.fillStyle = '#596770'; ctx.fillRect(x - 1.5, s.y - 20, 3, 34);
           const lg = ctx.createRadialGradient(x, s.y - 20, 1, x, s.y - 20, 22); lg.addColorStop(0, '#ffe9a8cc'); lg.addColorStop(1, '#ffe9a800');
           ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(x, s.y - 20, 22, 0, 7); ctx.fill();
+        } else if (s.kind === 'sign' && !s.left) {
+          // SLIC roadside service sign on a post
+          const bw = g.verge * 0.9, bh = bw * 0.62, [l1, l2] = SIGNS[s.sign];
+          ctx.fillStyle = '#596770'; ctx.fillRect(x - 1.5, s.y, 3, bh * 0.9);
+          ctx.fillStyle = '#0008'; rr(x - bw / 2 + 2, s.y - bh / 2 + 3, bw, bh, 3); ctx.fill();
+          ctx.fillStyle = '#00adb8'; rr(x - bw / 2, s.y - bh / 2, bw, bh, 3); ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.font = `900 ${Math.max(6, bh * 0.3)}px Inter, sans-serif`; ctx.fillText(l1, x, s.y - bh * 0.18, bw - 4);
+          ctx.font = `800 ${Math.max(5, bh * 0.22)}px Inter, sans-serif`; ctx.fillText(l2, x, s.y + bh * 0.2, bw - 4);
         } else if (!s.left) {
           const bw = g.verge * 0.86, bh = bw * 0.8;
           ctx.fillStyle = '#0008'; ctx.fillRect(x - bw / 2 + 3, s.y - bh / 2 + 4, bw, bh);
@@ -532,15 +583,17 @@
           ctx.fillStyle = sg; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
           shieldPath(x, y + ss * 0.08, ss * 0.55); ctx.fillStyle = '#ed4d60'; ctx.fill();
           ctx.fillStyle = '#fff'; ctx.font = `900 ${ss * 0.42}px Inter, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('SLIC', x, y - ss * 0.02);
-        } else if (it.type === 'coin') {
-          const sx = Math.abs(Math.cos(it.ph * 0.7)) * 0.75 + 0.25, rad = s * 1.15;
-          ctx.save(); ctx.translate(x, y); ctx.scale(sx, 1);
-          const gl = ctx.createRadialGradient(0, 0, 2, 0, 0, rad * 2); gl.addColorStop(0, '#ffce6988'); gl.addColorStop(1, '#ffce6900');
-          ctx.fillStyle = gl; ctx.fillRect(-rad * 2, -rad * 2, rad * 4, rad * 4);
-          ctx.fillStyle = '#c48a1a'; ctx.beginPath(); ctx.arc(0, 3, rad, 0, 7); ctx.fill();
-          ctx.fillStyle = '#ffce69'; ctx.beginPath(); ctx.arc(0, 0, rad, 0, 7); ctx.fill();
-          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, rad * 0.78, 0, 7); ctx.fill();
-          if (logo.complete && logo.naturalWidth) { ctx.beginPath(); ctx.arc(0, 0, rad * 0.74, 0, 7); ctx.clip(); const lw = rad * 1.5; ctx.drawImage(logo, -lw / 2, -lw * 0.4, lw, lw * 0.79); }
+        } else if (it.type === 'gold') {
+          // Gold shield (+200): same shape and pulse as the teal shield, gold rim, SLIC logo in the centre
+          const k = 1 + Math.sin(it.ph) * 0.08, ss = s * 1.15 * k;
+          const gl = ctx.createRadialGradient(x, y, 2, x, y, ss * 2); gl.addColorStop(0, '#ffce6999'); gl.addColorStop(1, '#ffce6900');
+          ctx.fillStyle = gl; ctx.fillRect(x - ss * 2, y - ss * 2, ss * 4, ss * 4);
+          shieldPath(x, y, ss);
+          const sg = ctx.createLinearGradient(x - ss, y - ss, x + ss, y + ss); sg.addColorStop(0, '#fff1c2'); sg.addColorStop(0.45, '#ffce69'); sg.addColorStop(1, '#b48420');
+          ctx.fillStyle = sg; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+          ctx.save();
+          shieldPath(x, y + ss * 0.04, ss * 0.68); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip();
+          if (logo.complete && logo.naturalWidth) { const lw = ss * 1.15, lh = lw * logo.naturalHeight / logo.naturalWidth; ctx.drawImage(logo, x - lw / 2, y - lh / 2 - ss * 0.05, lw, lh); }
           ctx.restore();
         }
       }
@@ -554,7 +607,7 @@
       for (const p of S.parts) { ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
       ctx.globalAlpha = 1;
       for (const t of S.texts) {
-        ctx.globalAlpha = Math.min(1, t.life * 1.5); ctx.font = '900 22px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.globalAlpha = Math.min(1, t.life * 1.5); ctx.font = t.small ? '900 13px Inter, sans-serif' : '900 22px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
         ctx.lineWidth = 5; ctx.strokeStyle = '#04121a'; ctx.strokeText(t.txt, t.x, t.y); ctx.fillStyle = t.color; ctx.fillText(t.txt, t.x, t.y);
       }
       ctx.globalAlpha = 1;
@@ -640,12 +693,12 @@
   $('toQuiz').onclick = () => { Store.update({ followConfirmed: true }); openQuiz(); };
 
   // ================= SERVICE AWARENESS CHALLENGE =================
-  let qIndex = 0, answers = [];
+  let qIndex = 0, answers = [], picks = [];
   function openQuiz() {
     const rec = Store.current();
     if (!rec || !rec.eligible) return route(rec);
     if (rec.awarenessCompleted) return showResult(rec, false);
-    qIndex = 0; answers = AWARENESS_QUESTIONS.map(() => false); // NO is the default for every question
+    qIndex = 0; picks = AWARENESS_QUESTIONS.map(() => null); // no default – the player must choose an option
     show('quizOv');
     renderQuestion(false);
   }
@@ -658,7 +711,7 @@
       $('quizIcon').textContent = q.icon;
       $('quizService').textContent = q.service.toUpperCase();
       $('quizQ').textContent = q.question;
-      setChoice(answers[qIndex]);
+      renderChoices(q);
       $('quizNext').textContent = qIndex === n - 1 ? 'SEE MY RESULT →' : 'NEXT QUESTION →';
       $('quizBar').style.width = ((qIndex + 1) / n) * 100 + '%';
     };
@@ -666,16 +719,33 @@
     card.classList.add('out');
     setTimeout(() => { fill(); card.classList.remove('out'); card.classList.add('in'); setTimeout(() => card.classList.remove('in'), 400); }, 220);
   }
-  function setChoice(yes) {
-    answers[qIndex] = yes;
-    $('ansYes').classList.toggle('sel', yes); $('ansYes').setAttribute('aria-checked', String(yes));
-    $('ansNo').classList.toggle('sel', !yes); $('ansNo').setAttribute('aria-checked', String(!yes));
+  // Option buttons for the current question (True/False side by side, multiple choice stacked).
+  function renderChoices(q) {
+    const box = $('quizChoices');
+    box.textContent = '';
+    box.classList.toggle('many', q.options.length > 2);
+    q.options.forEach((label, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'choice opt'; b.setAttribute('role', 'radio');
+      const mark = document.createElement('b'); mark.textContent = q.options.length > 2 ? String.fromCharCode(65 + i) : (i === 0 ? '✓' : '✕');
+      const text = document.createElement('span'); text.textContent = q.options.length > 2 ? label.replace(/^[A-D]\.\s*/, '') : label.toUpperCase();
+      b.append(mark, text);
+      b.onclick = () => { setChoice(i); tone(720, 0.08); buzz(10); };
+      box.append(b);
+    });
+    setChoice(picks[qIndex]);
   }
-  $('ansYes').onclick = () => { setChoice(true); tone(784, 0.08); buzz(10); };
-  $('ansNo').onclick = () => { setChoice(false); tone(440, 0.08); buzz(10); };
+  // pick: chosen option index, or null (nothing highlighted, Next disabled)
+  function setChoice(pick) {
+    picks[qIndex] = pick;
+    [...$('quizChoices').children].forEach((b, i) => { b.classList.toggle('sel', i === pick); b.setAttribute('aria-checked', String(i === pick)); });
+    $('quizNext').disabled = typeof pick !== 'number';
+  }
   $('quizNext').onclick = () => {
-    if (screen !== 'quizOv') return;
+    if (screen !== 'quizOv' || typeof picks[qIndex] !== 'number') return;
     if (qIndex < AWARENESS_QUESTIONS.length - 1) { qIndex++; tone(660, 0.06); renderQuestion(true); return; }
+    // One boolean per question: true = answered correctly.
+    answers = AWARENESS_QUESTIONS.map((q, i) => picks[i] === q.correct);
     Store.update({ pendingAnswers: answers.slice() });
     submitChallenge(true);
   };
