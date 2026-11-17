@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#06191f">
+<title>Player Records · SLIC Motor Show 2026</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="assets/css/playerrecords.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><img src="assets/logo.png" alt="SLIC General" width="44" height="44"><div><span class="eyebrow">SLIC MOTOR SHOW 2026</span><h1>Player Records</h1></div></div>
+  <div class="who" id="who" hidden><button class="btn ghost sm" id="logoutBtn" type="button">Lock</button></div>
+</header>
+
+<!-- STAFF SIGN-IN -->
+<main class="login-wrap" id="loginView">
+  <form class="card login" id="loginForm" novalidate>
+    <div class="lock" aria-hidden="true">🔒</div>
+    <h2>Enter password</h2>
+    <p class="muted">Authorised SLIC General staff only. Player details are personal information – do not share exports.</p>
+    <label for="lPass">Password</label>
+    <input id="lPass" type="password" autocomplete="current-password" required>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn primary block" id="loginBtn" type="submit">OPEN RECORDS</button>
+  </form>
+</main>
+
+<!-- DASHBOARD -->
+<main class="dash" id="dashView" hidden>
+  <section class="kpis" aria-label="Summary">
+    <div class="kpi"><span>Total Game Attempts</span><b id="kAttempts">–</b></div>
+    <div class="kpi"><span>Completed Games</span><b id="kCompleted">–</b></div>
+    <div class="kpi gold"><span>Total Winners</span><b id="kWinners">–</b></div>
+    <div class="kpi"><span>Average Driving Score</span><b id="kAvg">–</b></div>
+  </section>
+
+  <section class="card toolbar" aria-label="Filters">
+    <div class="search"><label class="sr" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Search name, mobile or Player ID" autocomplete="off"></div>
+    <div class="filters">
+      <label><span>Players</span><select id="fWinner"><option value="all">All Players</option><option value="win">Winners</option><option value="non">Non-Winners</option></select></label>
+      <label><span>Game status</span><select id="fStatus"><option value="">All statuses</option></select></label>
+      <label><span>From</span><input id="fFrom" type="date"></label>
+      <label><span>To</span><input id="fTo" type="date"></label>
+      <label><span>Sort</span><select id="fSort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="score">Highest score</option></select></label>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="clearBtn" type="button">Clear filters</button>
+      <button class="btn ghost" id="refreshBtn" type="button">↻ Refresh</button>
+      <button class="btn excel" id="xlsxBtn" type="button">DOWNLOAD EXCEL</button>
+      <button class="btn csv" id="csvBtn" type="button">DOWNLOAD CSV</button>
+    </div>
+  </section>
+
+  <p class="meta" id="meta" aria-live="polite"></p>
+  <div class="state" id="state" hidden></div>
+
+  <section class="card table-wrap" id="tableWrap" hidden>
+    <table>
+      <thead><tr><th>Player ID</th><th>Customer</th><th>Mobile</th><th>Registered</th><th>Status</th><th class="num">Driving</th><th>Facebook</th><th class="num">Awareness</th><th>Winner</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+  <section class="cards" id="cards" hidden></section>
+  <button class="btn ghost block more" id="moreBtn" type="button" hidden>Show more</button>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/vendor/xlsx.mini.min.js"></script>
+<script src="assets/js/playerrecords.js"></script>
+</body>
+</html>

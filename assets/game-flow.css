@@ -158,3 +158,6 @@ a.big.teal { display: flex; align-items: center; justify-content: center; text-d
 #regBtn:disabled { opacity: .6; }
 @keyframes save-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .save-ov .save-spin { animation-duration: 2.4s; } }
+
+/* All Winners: awareness score tag */
+.hof-aw { font-size: 9px; font-weight: 800; color: #a3bec5; margin-left: 4px; white-space: nowrap; }

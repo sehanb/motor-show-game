@@ -62,16 +62,21 @@
     return p;
   }
 
+  // Short IDs (SLIC-001) are guessable; the secret accessKey from registerPlayer proves the attempt is ours.
+  function withKey(o, accessKey) { if (accessKey) o.accessKey = accessKey; return o; }
+
   root.SlicApi = {
     enabled: ENABLED,
     busy: function (action) { return !!inFlight[action]; },
-    /* → { playerId } */
+    /* → { playerId, accessKey } */
     registerPlayer: function (name, mobile) { return post('registerPlayer', { name: name, mobile: mobile }); },
     /* → { playerId, score, eligible } */
-    updateGameScore: function (playerId, score) { return post('updateGameScore', { playerId: playerId, score: score }); },
+    updateGameScore: function (playerId, score, accessKey) { return post('updateGameScore', withKey({ playerId: playerId, score: score }, accessKey)); },
+    /* Public leaderboard: [{ name, score, awareness, winner, me? }] – no mobiles or IDs are ever returned. */
+    getLeaderboard: function (playerId) { return post('getLeaderboard', playerId ? { playerId: playerId } : {}); },
     /* answers: exactly five booleans (true = YES). → { playerId, awarenessScore, winner } */
-    completeChallenge: function (playerId, facebookConfirmed, answers) {
-      return post('completeChallenge', { playerId: playerId, facebookConfirmed: facebookConfirmed === true, answers: answers.map(function (a) { return a === true; }) });
+    completeChallenge: function (playerId, facebookConfirmed, answers, accessKey) {
+      return post('completeChallenge', withKey({ playerId: playerId, facebookConfirmed: facebookConfirmed === true, answers: answers.map(function (a) { return a === true; }) }, accessKey));
     }
   };
 })(window);

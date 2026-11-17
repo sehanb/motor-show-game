@@ -1,5 +1,5 @@
 /* SLIC Motor Show 2026 – mobile driving challenge + service awareness flow (static prototype).
-   Flow: REGISTER → PLAY ONCE → SCORE → (score > 1,000) FACEBOOK → SERVICE AWARENESS CHALLENGE → RESULT → HALL OF FAME
+   Flow: REGISTER → PLAY ONCE → SCORE → (score > 1,000) FACEBOOK → SERVICE AWARENESS CHALLENGE → RESULT → ALL WINNERS
    All participation data goes through window.SlicStore (assets/game-store.js). */
 (() => {
   'use strict';
@@ -175,7 +175,7 @@
     saving('REGISTERING…', 'Getting your starting grid ready. This only takes a moment.');
     Api.registerPlayer(name, mobile).then((res) => {
       if (typeof res.playerId !== 'string' || !res.playerId) throw new Error('Unexpected server response.');
-      Store.register(name, mobile, res.playerId);
+      Store.register(name, mobile, res.playerId, typeof res.accessKey === 'string' ? res.accessKey : null);
       countdown();
     }).catch((err) => {
       show('reg');
@@ -581,7 +581,7 @@
     const rec = Store.current();
     if (!rec) return show('reg');
     saving('SAVING YOUR SCORE…', 'Great drive! Hold tight while we record your result.');
-    Api.updateGameScore(rec.playerId, rec.score).then((res) => {
+    Api.updateGameScore(rec.playerId, rec.score, rec.accessKey).then((res) => {
       const saved = Store.update({ scoreSaved: true, eligible: typeof res.eligible === 'boolean' ? res.eligible : rec.eligible });
       Store.addScore(saved);
       route(saved, fresh);
@@ -695,7 +695,7 @@
     const local = () => finalise(a.filter(Boolean).length, a.every((x) => x === true));
     if (!ONLINE) return local();
     saving('CHECKING YOUR ANSWERS…', 'Saving your Service Awareness Challenge result.');
-    Api.completeChallenge(rec.playerId, rec.followConfirmed === true, a).then((res) => {
+    Api.completeChallenge(rec.playerId, rec.followConfirmed === true, a, rec.accessKey).then((res) => {
       const n = Number(res.awarenessScore);
       if (!Number.isFinite(n) || typeof res.winner !== 'boolean') throw new Error('Unexpected server response.');
       finalise(n, res.winner);
@@ -724,13 +724,32 @@
       if (fresh) { tone(523, 0.12); setTimeout(() => tone(659, 0.2), 120); }
     }
   }
-  // ================= HALL OF FAME (this phone only) =================
+  // ================= ALL WINNERS (live from Google Sheets) =================
   const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  function renderBoard(id, rec) {
-    const top = Store.board().slice(0, 20);
+  // entries: [{ name, score, awareness, winner, me }]
+  function boardRows(entries) {
+    return entries.map((e, i) => `<div class="${i < 3 ? 'rank' + (i + 1) : ''}${e.me ? ' me' : ''}"><span><span class="pos">${String(i + 1).padStart(2, '0')}</span> ${e.winner ? '<span class="hof-cup" title="5/5 awareness winner" aria-label="Awareness challenge winner">🏆</span> ' : ''}${esc(e.name)}${e.me ? ' <small class="you">YOU</small>' : ''}${e.awareness != null && isFinite(e.awareness) ? ` <small class="hof-aw">${Number(e.awareness)}/5</small>` : ''}</span><strong>${Number(e.score).toLocaleString()}</strong></div>`).join('');
+  }
+  function renderLocalBoard(id, rec) {
+    const top = Store.board();
     $(id).innerHTML = top.length
-      ? top.map((e, i) => `<div class="${i < 3 ? 'rank' + (i + 1) : ''}${rec && e.id === rec.playerId ? ' me' : ''}"><span><span class="pos">${String(i + 1).padStart(2, '0')}</span> ${e.won ? '<span class="hof-cup" title="5/5 awareness winner" aria-label="Awareness challenge winner">🏆</span> ' : ''}${esc(e.name)}${rec && e.id === rec.playerId ? ' <small class="you">YOU</small>' : ''}</span><strong>${e.score.toLocaleString()}</strong></div>`).join('')
-      : '<div class="empty-score">No results on this phone yet.</div>';
+      ? boardRows(top.map((e) => ({ name: e.name, score: e.score, winner: e.won, me: rec && e.id === rec.playerId })))
+      : '<div class="empty-score">No results yet.</div>';
+  }
+  let boardReq = 0;
+  function renderBoard(id, rec) {
+    if (!ONLINE) return renderLocalBoard(id, rec);
+    const req = ++boardReq;
+    $(id).innerHTML = '<div class="empty-score">Loading all players…</div>';
+    Api.getLeaderboard(rec && rec.playerId).then((res) => {
+      if (req !== boardReq) return;
+      const list = Array.isArray(res.players) ? res.players.filter((p) => p && isFinite(p.score)) : [];
+      $(id).innerHTML = list.length ? boardRows(list) : '<div class="empty-score">No results yet – be the first!</div>';
+    }).catch(() => {
+      if (req !== boardReq) return;
+      $(id).innerHTML = '<div class="empty-score">Could not load the live results. <button class="link-btn" type="button" id="boardRetry">Try again</button></div>';
+      $('boardRetry').onclick = () => renderBoard(id, Store.current());
+    });
   }
   document.querySelectorAll('[data-hof]').forEach((b) => {
     b.onclick = () => {

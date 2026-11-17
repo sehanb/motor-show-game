@@ -67,14 +67,14 @@
     hasPlayed: function (mobile) { return read(KEYS.players, []).indexOf(mobile) >= 0; },
 
     /* playerId: the ID returned by the Google Sheets API (a local demo ID only when the API is disabled). */
-    register: function (name, mobile, playerId) {
+    register: function (name, mobile, playerId, accessKey) {
       var rec = {
         playerId: playerId || nextPlayerId(), name: name, mobile: mobile, registeredAt: nowSL(),
         gameStarted: false, gameCompleted: false, status: 'REGISTERED', score: null,
         eligible: false, facebookVisited: false, followConfirmed: false,
         awarenessAnswers: null, awarenessScore: null, awarenessCompleted: false, isWinner: false,
         playedAt: null, awarenessCompletedAt: null,
-        scoreSaved: false, pendingAnswers: null
+        scoreSaved: false, pendingAnswers: null, accessKey: accessKey || null
       };
       write(KEYS.player, rec);
       var list = read(KEYS.players, []);
