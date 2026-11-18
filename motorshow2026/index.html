@@ -48,12 +48,20 @@
   </section>
 
   <!-- 2b. NOT ELIGIBLE -->
-  <section class="ov" id="doneOv">
-    <span class="eyebrow">CHALLENGE COMPLETE!</span>
-    <h2 class="flow-title">THANK YOU FOR DRIVING<br><em>WITH SLIC GENERAL!</em></h2>
-    <p class="result-label">YOUR FINAL SCORE</p><div class="scorebig" id="doneScore">0</div>
+  <section class="ov lost" id="doneOv">
+    <img class="logo-big reg-logo" src="assets/logo.png" alt="SLIC General">
+    <span class="eyebrow lost-tag">✕ NOT QUALIFIED THIS TIME</span>
+    <h2 class="flow-title">SO CLOSE!<br><em>KEEP DRIVING SAFE</em></h2>
+    <div class="target-card" role="group" aria-label="Your score compared with the qualifying score">
+      <div class="tc-row">
+        <div class="tc-cell"><span>YOUR SCORE</span><b id="doneScore">0</b></div>
+        <div class="tc-cell need"><span>NEEDED TO QUALIFY</span><b><span id="doneNeed">1,001</span>+</b></div>
+      </div>
+      <div class="tc-bar" aria-hidden="true"><i id="doneBar"></i></div>
+      <p class="tc-short" id="doneShort"></p>
+    </div>
     <div class="stats"><div><b id="stShield">0</b><span>SHIELDS</span></div><div><b id="stCoin">0</b><span>GOLD</span></div><div><b id="stDodge">0</b><span>DODGED</span></div></div>
-    <p class="sub">Scores above <span data-min-win>1,000</span> unlock the Service Awareness Challenge. Thank you for driving safely – on the road, every second counts.</p>
+    <p class="sub">Only scores above <b class="need-txt"><span data-min-win>1,000</span></b> unlock the Service Awareness Challenge and the chance to win a gift. Thank you for driving safely – on the road, every second counts.</p>
     <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW ALL WINNERS 🏆</button></div>
   </section>
 
@@ -77,6 +85,7 @@
 
   <!-- 4. SERVICE AWARENESS CHALLENGE -->
   <section class="ov quiz" id="quizOv">
+    <img class="logo-big reg-logo" src="assets/logo.png" alt="SLIC General">
     <span class="eyebrow">SERVICE AWARENESS CHALLENGE</span>
     <h2 class="flow-title quiz-title">DIGITAL SERVICES <em>AWARENESS QUIZ</em></h2>
     <p class="sub quiz-sub">5 quick questions about SLIC General’s digital services. Get all 5 right to win a gift!</p>
@@ -93,6 +102,7 @@
 
   <!-- 5a. WINNER (5/5 YES) -->
   <section class="ov celebrate win" id="winOv">
+    <img class="logo-big reg-logo" src="assets/logo.png" alt="SLIC General">
     <div class="trophy" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="tg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c2"/><stop offset=".45" stop-color="#ffce69"/><stop offset="1" stop-color="#b48420"/></linearGradient></defs><path d="M36 18h48v28c0 22-48 22-48 0z" fill="url(#tg2)"/><path d="M36 26H20v12c0 12 10 18 20 18M84 26h16v12c0 12-10 18-20 18" fill="none" stroke="url(#tg2)" stroke-width="6"/><rect x="55" y="62" width="10" height="20" fill="url(#tg2)"/><rect x="38" y="84" width="44" height="10" rx="3" fill="url(#tg2)"/><rect x="32" y="94" width="56" height="10" rx="3" fill="#00adb8"/></svg></div>
     <span class="eyebrow">SLIC General Motor Game</span>
     <h2 class="flow-title">CONGRATULATIONS!<br><em>YOU'RE A WINNER! 🏆</em></h2>
@@ -108,6 +118,7 @@
 
   <!-- 5b. THANK YOU (one or more NO) -->
   <section class="ov" id="thanksOv">
+    <img class="logo-big reg-logo" src="assets/logo.png" alt="SLIC General">
     <span class="eyebrow">SERVICE AWARENESS CHALLENGE</span>
     <h2 class="flow-title">THANK YOU FOR <em>TAKING THE CHALLENGE!</em></h2>
     <p class="sub">Every journey is a chance to discover something new. You've just learned more about how SLIC General can support you!</p>

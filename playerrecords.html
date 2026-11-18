@@ -14,7 +14,7 @@
 <body>
 <header class="topbar">
   <div class="brand"><img src="assets/logo.png" alt="SLIC General" width="44" height="44"><div><span class="eyebrow">SLIC General Motor Game</span><h1>Player Records</h1></div></div>
-  <div class="who" id="who" hidden><button class="btn ghost sm" id="logoutBtn" type="button">Lock</button></div>
+  <div class="who" id="who" hidden><button class="btn ghost sm" id="settingsBtn" type="button" aria-pressed="false"><span aria-hidden="true">⚙</span><span class="lbl"> Settings</span></button><button class="btn ghost sm" id="logoutBtn" type="button"><span aria-hidden="true">🔒</span><span class="lbl"> Lock</span></button></div>
 </header>
 
 <!-- STAFF SIGN-IN -->
@@ -40,7 +40,8 @@
   </section>
 
   <section class="card toolbar" aria-label="Filters">
-    <div class="search"><label class="sr" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Search name, mobile or Player ID" autocomplete="off"></div>
+    <div class="search-row"><div class="search"><label class="sr" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Search name, mobile or Player ID" autocomplete="off"></div><label class="day-pick"><span class="sr">Registered on</span><input id="fDay" type="date" aria-label="Show records from this date"></label></div>
+    <div class="filter-panel">
     <div class="filters">
       <label><span>Players</span><select id="fWinner"><option value="all">All Players</option><option value="win">Winners</option><option value="non">Non-Winners</option></select></label>
       <label><span>Game status</span><select id="fStatus"><option value="">All statuses</option></select></label>
@@ -54,6 +55,7 @@
       <button class="btn excel" id="xlsxBtn" type="button">DOWNLOAD EXCEL</button>
       <button class="btn csv" id="csvBtn" type="button">DOWNLOAD CSV</button>
     </div>
+    </div>
   </section>
 
   <p class="meta" id="meta" aria-live="polite"></p>
@@ -66,7 +68,23 @@
     </table>
   </section>
   <section class="cards" id="cards" hidden></section>
-  <button class="btn ghost block more" id="moreBtn" type="button" hidden>Show more</button>
+  <button class="more-sentinel" id="moreSentinel" type="button" hidden>Loading more…</button>
+  <nav class="pager" id="pager" aria-label="Record pages" hidden></nav>
+</main>
+
+<!-- GAME SETTINGS (separate view, opened from the header) -->
+<main class="dash settings-view" id="settingsView" hidden>
+  <button class="btn ghost sm back" id="settingsBack" type="button">← Back to records</button>
+  <form class="card settings" id="setForm" aria-label="Game settings" novalidate>
+    <div class="set-head"><h2>⚙ Game settings</h2></div>
+    <p class="set-now" id="setNow"></p>
+    <div class="set-grid">
+      <label><span>Minimum score to win</span><input id="sMin" type="number" min="0" max="1000000" step="1" inputmode="numeric" required><small class="muted">Players must score <b>more than</b> this to unlock the quiz.</small></label>
+      <label><span>Event end date (Sri Lanka time)</span><input id="sEnd" type="datetime-local"><small class="muted">Leave empty for no end date. After this, new players see “event ended”.</small></label>
+      <div class="set-actions"><button class="btn primary" id="setSave" type="submit">SAVE SETTINGS</button></div>
+    </div>
+    <p class="set-msg" id="setMsg" role="status"></p>
+  </form>
 </main>
 
 <script src="assets/config.js"></script>

@@ -10,6 +10,7 @@
  *                   "2026-11-30 18:00"  → ends at 6:00 pm on 30 Nov 2026
  *                   Missing/empty → no end date.
  *
+ * Staff can also change both from the Player Records dashboard (saveGameSettings, password required).
  * The game receives these through the existing public getLeaderboard action (field `settings`),
  * so no new API is needed.
  *
@@ -31,8 +32,8 @@ function minWinScore_() {
 }
 
 /** Event end as a Date, or null when EVENT_END_DATE is not set / not understood. */
-function eventEndDate_() {
-  var raw = String(PropertiesService.getScriptProperties().getProperty('EVENT_END_DATE') || '').trim();
+function eventEndDate_(text) {
+  var raw = String(text != null ? text : (PropertiesService.getScriptProperties().getProperty('EVENT_END_DATE') || '')).trim();
   var m = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?$/);
   if (!m) return null;
   var time = m[4] != null ? ('0' + m[4]).slice(-2) + ':' + m[5] + ':00' : '23:59:59';
@@ -58,4 +59,32 @@ function publicGameSettings_() {
     eventEnd: end ? end.toISOString() : null,
     eventEnded: !!end && Date.now() > end.getTime()
   };
+}
+
+// ── Staff dashboard (playerrecords.html) – password already checked by StaffRecords.gs ────────────
+
+/** Current values for the dashboard form. eventEndDate is the raw "YYYY-MM-DD[ HH:mm]" text or "". */
+function staffGameSettings_() {
+  var raw = String(PropertiesService.getScriptProperties().getProperty('EVENT_END_DATE') || '').trim();
+  var s = publicGameSettings_();
+  s.eventEndDate = eventEndDate_() ? raw : '';
+  s.defaultMinWinScore = DEFAULT_MIN_WIN_SCORE;
+  return s;
+}
+
+/** saveGameSettings { password, minWinScore, eventEndDate } – empty eventEndDate removes the end date. */
+function staffSaveGameSettings_(body) {
+  var score = Number(body.minWinScore);
+  if (!isFinite(score) || score < 0 || score > 1000000 || Math.floor(score) !== score) {
+    return { success: false, error: 'Minimum score must be a whole number between 0 and 1,000,000.' };
+  }
+  var end = String(body.eventEndDate == null ? '' : body.eventEndDate).trim().replace('T', ' ');
+  if (end && !/^\d{4}-\d{2}-\d{2}( \d{1,2}:\d{2})?$/.test(end)) {
+    return { success: false, error: 'End date must look like 2026-11-30 or 2026-11-30 18:00.' };
+  }
+  if (end && !eventEndDate_(end)) return { success: false, error: 'That end date is not a real date.' };
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('MIN_WIN_SCORE', String(score));
+  if (end) props.setProperty('EVENT_END_DATE', end); else props.deleteProperty('EVENT_END_DATE');
+  return { success: true, settings: staffGameSettings_() };
 }

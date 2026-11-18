@@ -35,9 +35,14 @@ var STAFF_CFG = {
 
 /** Returns a response object for staff actions, or null for any other action. */
 function handleStaffAction_(body) {
-  if (!body || (body.action !== 'getPlayerRecords' && body.action !== 'getLeaderboard')) return null;
+  var a = body && body.action;
+  if (a !== 'getPlayerRecords' && a !== 'getLeaderboard' && a !== 'saveGameSettings') return null;
   try {
-    return body.action === 'getLeaderboard' ? publicLeaderboard_(body) : staffGetPlayerRecords_(body);
+    if (a === 'getLeaderboard') return publicLeaderboard_(body);
+    var denied = staffCheckPassword_(body);
+    if (denied) return denied;
+    if (a === 'saveGameSettings') return staffSaveGameSettings_(body); // GameSettings.gs
+    return staffGetPlayerRecords_(body);
   } catch (err) {
     console.error('getPlayerRecords failed: ' + (err && err.stack || err));
     return { success: false, error: 'Server error. Please try again.' };
@@ -51,7 +56,8 @@ function staffSafeEqual_(a, b) {
   return diff === 0;
 }
 
-function staffGetPlayerRecords_(body) {
+/** Returns an error response when the staff password is wrong/missing, otherwise null. */
+function staffCheckPassword_(body) {
   var expected = PropertiesService.getScriptProperties().getProperty('STAFF_PASSWORD');
   if (!expected) return { success: false, error: 'STAFF_PASSWORD is not set in Script Properties.' };
 
@@ -65,7 +71,10 @@ function staffGetPlayerRecords_(body) {
     return { success: false, error: 'Incorrect password.', authRequired: true };
   }
   cache.remove('stf_fails');
+  return null;
+}
 
+function staffGetPlayerRecords_(body) {
   var ss = SpreadsheetApp.getActiveSpreadsheet(); // standalone script? use SpreadsheetApp.openById('…')
   var sh = ss.getSheetByName(STAFF_CFG.playersSheet);
   if (!sh) throw new Error('Sheet "' + STAFF_CFG.playersSheet + '" not found.');
@@ -89,7 +98,7 @@ function staffGetPlayerRecords_(body) {
     records.push(rec);
   });
 
-  return { success: true, records: records, generatedAt: Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX") };
+  return { success: true, settings: typeof staffGameSettings_ === 'function' ? staffGameSettings_() : null, records: records, generatedAt: Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX") };
 }
 
 // ── Public leaderboard for the game's "All Winners" screen (no password) ───────────────────────────

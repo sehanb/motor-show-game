@@ -177,3 +177,25 @@ a.big.teal { display: flex; align-items: center; justify-content: center; text-d
 .quiz-choices.many { grid-template-columns: 1fr; gap: 8px; }
 .quiz-choices.many .choice { min-height: 46px; justify-content: flex-start; text-align: left; font-size: 13px; font-weight: 800; letter-spacing: 0; line-height: 1.3; padding: 8px 12px; }
 .quiz-choices.many .choice b { flex: none; }
+
+/* Centre screens only when they fit; taller screens (e.g. quiz question 4) start at the top and scroll,
+   so the logo is never cut off. Auto margins work in every browser, unlike `safe center`. */
+.ov { justify-content: flex-start; }
+.ov > :first-child { margin-top: auto; }
+.ov > :last-child { margin-bottom: auto; }
+
+/* Not-qualified result: clearly "not a win" + qualifying score highlighted */
+.ov.lost .lost-tag { color: #ff8a9a; background: #ef4f6322; border: 1px solid #ef4f6366; padding: 5px 12px; border-radius: 999px; }
+.ov.lost .flow-title em { color: #ff8a9a; }
+.target-card { width: 100%; max-width: 380px; margin: 14px auto 12px; padding: 14px; border-radius: 18px; background: #ffffff0d; border: 1px solid #ffffff1f; }
+.tc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tc-cell { padding: 10px 6px; border-radius: 12px; background: #ffffff0a; text-align: center; }
+.tc-cell > span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #a9c3c8; }
+.tc-cell b { display: block; margin-top: 4px; font-family: var(--heading, Impact, sans-serif); font-size: 38px; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.tc-cell.need { background: linear-gradient(160deg, #ffce6930, #ffce690d); border: 1.5px solid #ffce69; box-shadow: 0 0 22px #ffce6933; }
+.tc-cell.need > span { color: #ffd36b; }
+.tc-cell.need b { color: #ffd36b; text-shadow: 0 0 16px #ffce6966; }
+.tc-bar { position: relative; height: 10px; margin: 12px 2px 0; border-radius: 99px; background: #ffffff14; overflow: hidden; }
+.tc-bar i { position: absolute; inset: 0 auto 0 0; width: 4%; border-radius: inherit; background: linear-gradient(90deg, #ef4f63, #ff8a9a); transition: width 1s ease; }
+.tc-short { margin: 10px 0 0; font-size: 14px; font-weight: 700; color: #ff9fac; }
+.need-txt { color: #ffd36b; }

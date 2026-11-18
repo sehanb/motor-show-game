@@ -9,11 +9,11 @@
   const API = typeof cfg.webAppUrl === 'string' ? cfg.webAppUrl.trim() : '';
   const TOKEN_KEY = 'slic_records_pass';
   const TZ = 'Asia/Colombo';
-  const PAGE = 100;
+  const PAGE = 25; // desktop default page size, and phone scroll batch
   const COLUMNS = ['Player ID', 'Name', 'Mobile', 'Registered At', 'Game Status', 'Driving Score',
     'Facebook Confirmed', 'Awareness Score', 'Winner', 'Last Updated'];
 
-  let records = [], view = [], shown = PAGE, loading = false, generatedAt = '';
+  let records = [], view = [], page = 1, pageSize = PAGE, shown = PAGE, loading = false, generatedAt = '';
 
   // ---------- API ----------
   async function api(action, data) {
@@ -52,14 +52,25 @@
   function showLogin(msg) {
     records = []; view = [];
     $('rows').textContent = ''; $('cards').textContent = '';
-    $('dashView').hidden = true; $('who').hidden = true; $('loginView').hidden = false;
+    $('dashView').hidden = true; $('settingsView').hidden = true; $('who').hidden = true; $('loginView').hidden = false;
     $('loginErr').textContent = msg || '';
     $('lPass').value = '';
     $('lPass').focus();
   }
   function showDash() {
-    $('loginView').hidden = true; $('dashView').hidden = false; $('who').hidden = false;
+    $('loginView').hidden = true; $('who').hidden = false;
+    showSection('records');
   }
+  // Records and Game settings are separate sections; the header ⚙ button switches between them.
+  function showSection(name) {
+    const settings = name === 'settings';
+    $('dashView').hidden = settings; $('settingsView').hidden = !settings;
+    $('settingsBtn').setAttribute('aria-pressed', String(settings));
+    $('settingsBtn').classList.toggle('on', settings);
+    window.scrollTo(0, 0);
+  }
+  $('settingsBtn').addEventListener('click', () => showSection($('settingsView').hidden ? 'settings' : 'records'));
+  $('settingsBack').addEventListener('click', () => showSection('records'));
   $('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('loginBtn');
@@ -85,6 +96,7 @@
       showDash();
       records = (Array.isArray(r.records) ? r.records : []).map(normalise);
       generatedAt = r.generatedAt || '';
+      renderSettings(r.settings);
       fillStatuses();
       apply();
       return true;
@@ -106,7 +118,7 @@
   const toBool = (v) => v === true || /^(true|yes|y|1|✓)$/i.test(String(v == null ? '' : v).trim());
   const toNum = (v) => (v === '' || v == null || !isFinite(Number(v)) ? null : Number(v));
   const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
-  const dispFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+  const dispFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
   const exportFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   function parseDate(v) {
     if (!v) return null;
@@ -149,28 +161,36 @@
   // ---------- FILTER / SORT ----------
   function apply() {
     const q = $('fSearch').value.trim().toLowerCase().replace(/[\s-]/g, '');
-    const w = $('fWinner').value, st = $('fStatus').value, from = $('fFrom').value, to = $('fTo').value, sort = $('fSort').value;
-    view = records.filter((r) =>
-      (!q || r.search.replace(/[\s-]/g, '').includes(q)) &&
-      (w === 'all' || (w === 'win' ? r.winner : !r.winner)) &&
-      (!st || r.status === st) &&
-      (!from || (r.regDay && r.regDay >= from)) &&
-      (!to || (r.regDay && r.regDay <= to)));
+    const match = (r) => !q || r.search.replace(/[\s-]/g, '').includes(q);
+    let sort = 'new';
+    if (mobileQ.matches) {
+      // Phones: search + one date only.
+      const day = $('fDay').value;
+      view = records.filter((r) => match(r) && (!day || r.regDay === day));
+    } else {
+      const w = $('fWinner').value, st = $('fStatus').value, from = $('fFrom').value, to = $('fTo').value;
+      sort = $('fSort').value;
+      view = records.filter((r) => match(r) &&
+        (w === 'all' || (w === 'win' ? r.winner : !r.winner)) &&
+        (!st || r.status === st) &&
+        (!from || (r.regDay && r.regDay >= from)) &&
+        (!to || (r.regDay && r.regDay <= to)));
+    }
     view.sort(sort === 'old' ? (a, b) => a.regTime - b.regTime
       : sort === 'score' ? (a, b) => (b.score ?? -1) - (a.score ?? -1) || b.regTime - a.regTime
       : (a, b) => b.regTime - a.regTime);
-    shown = PAGE;
+    page = 1; shown = PAGE;
     kpis();
     render();
   }
   ['fSearch'].forEach((id) => $(id).addEventListener('input', debounce(apply, 150)));
-  ['fWinner', 'fStatus', 'fFrom', 'fTo', 'fSort'].forEach((id) => $(id).addEventListener('change', apply));
+  ['fWinner', 'fStatus', 'fFrom', 'fTo', 'fSort', 'fDay'].forEach((id) => $(id).addEventListener('change', apply));
   $('clearBtn').addEventListener('click', () => {
-    $('fSearch').value = ''; $('fWinner').value = 'all'; $('fStatus').value = ''; $('fFrom').value = ''; $('fTo').value = ''; $('fSort').value = 'new';
+    $('fSearch').value = ''; $('fWinner').value = 'all'; $('fStatus').value = ''; $('fFrom').value = ''; $('fTo').value = ''; $('fSort').value = 'new'; $('fDay').value = '';
     apply();
   });
   function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
-  const filtersActive = () => !!($('fSearch').value.trim() || $('fWinner').value !== 'all' || $('fStatus').value || $('fFrom').value || $('fTo').value);
+  const filtersActive = () => !!($('fSearch').value.trim() || $('fDay').value || $('fWinner').value !== 'all' || $('fStatus').value || $('fFrom').value || $('fTo').value);
 
   // ---------- KPIs (from all loaded records) ----------
   function kpis() {
@@ -184,14 +204,14 @@
 
   // ---------- RENDER ----------
   const mobileQ = matchMedia('(max-width: 860px)');
-  mobileQ.addEventListener ? mobileQ.addEventListener('change', render) : mobileQ.addListener(render);
+  mobileQ.addEventListener ? mobileQ.addEventListener('change', apply) : mobileQ.addListener(apply);
   function setState(kind, msg) {
     const el = $('state');
     el.hidden = false; el.className = 'state ' + kind; el.textContent = '';
     if (kind === 'loading') { const s = document.createElement('div'); s.className = 'spin'; el.append(s); }
     const p = document.createElement('p'); p.textContent = msg; el.append(p);
     if (kind === 'error') { const b = document.createElement('button'); b.className = 'btn primary'; b.type = 'button'; b.textContent = 'Try again'; b.onclick = () => load(); el.append(b); }
-    $('tableWrap').hidden = true; $('cards').hidden = true; $('moreBtn').hidden = true;
+    $('tableWrap').hidden = true; $('cards').hidden = true; $('pager').hidden = true; $('moreSentinel').hidden = true;
     $('meta').textContent = '';
   }
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -204,46 +224,126 @@
     if (!records.length && !loading) return setState('empty', 'No player records yet. Registrations from the game will appear here.');
     if (!view.length) return setState('empty', 'No players match these filters.');
     $('state').hidden = true;
-    const list = view.slice(0, shown);
     const updated = generatedAt ? ' · Updated ' + fmtDate(parseDate(generatedAt)) : '';
-    $('meta').textContent = `Showing ${list.length.toLocaleString()} of ${view.length.toLocaleString()} matching players (${records.length.toLocaleString()} total)${updated}`;
-    $('moreBtn').hidden = view.length <= shown;
 
     if (mobileQ.matches) {
-      $('tableWrap').hidden = true; $('cards').hidden = false; $('rows').textContent = '';
-      const frag = document.createDocumentFragment();
-      list.forEach((r) => {
-        const c = el('article', 'pcard' + (r.winner ? ' win' : ''));
-        const top = el('div', 'top');
-        const left = el('div');
-        left.append(el('div', 'nm', r.name || '—'), el('div', 'sub mob', r.mobile || '—'));
-        top.append(left, r.winner ? trophy() : el('span', 'pill', r.status || '—'));
-        const dl = el('dl');
-        [['Driving', fmtNum(r.score)], ['Awareness', r.awareness === null ? '—' : r.awareness + ' / 5'], ['Facebook', r.facebook ? '✓ Yes' : 'No']]
-          .forEach(([k, v]) => { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); });
-        c.append(top, dl, el('div', 'sub', fmtDate(r.reg) + (r.winner && r.status ? ' · ' + r.status : '')), el('div', 'sub pid', r.playerId));
-        frag.append(c);
-      });
-      $('cards').replaceChildren(frag);
-    } else {
-      $('cards').hidden = true; $('tableWrap').hidden = false; $('cards').textContent = '';
-      const frag = document.createDocumentFragment();
-      list.forEach((r) => {
-        const tr = el('tr', r.winner ? 'win' : '');
-        const cells = [
-          el('td', 'pid', r.playerId), el('td', 'nm', r.name), el('td', 'mob', r.mobile), el('td', 'dt', fmtDate(r.reg)),
-          el('td'), el('td', 'num', fmtNum(r.score)), el('td'), el('td', 'num', r.awareness === null ? '—' : r.awareness + ' / 5'), el('td')
-        ];
-        cells[4].append(el('span', 'pill', r.status || '—'));
-        cells[6].append(yesNo(r.facebook));
-        cells[8].append(r.winner ? trophy() : el('span', 'no', '—'));
-        tr.append(...cells);
-        frag.append(tr);
-      });
-      $('rows').replaceChildren(frag);
+      // Phones: first 25 cards now, more while scrolling (no pager).
+      $('tableWrap').hidden = true; $('cards').hidden = false; $('rows').textContent = ''; $('pager').hidden = true;
+      $('cards').replaceChildren(cardsFor(view.slice(0, shown)));
+      mobileMeta();
+      return;
     }
+    $('moreSentinel').hidden = true;
+    $('cards').hidden = true; $('tableWrap').hidden = false; $('cards').textContent = '';
+    const pages = Math.max(1, Math.ceil(view.length / pageSize));
+    page = Math.min(Math.max(1, page), pages);
+    const first = (page - 1) * pageSize;
+    const list = view.slice(first, first + pageSize);
+    $('meta').textContent = `Showing ${(first + 1).toLocaleString()}–${(first + list.length).toLocaleString()} of ${view.length.toLocaleString()} matching players (${records.length.toLocaleString()} total)${updated}`;
+    renderPager(pages);
+    const frag = document.createDocumentFragment();
+    list.forEach((r) => {
+      const tr = el('tr', r.winner ? 'win' : '');
+      const cells = [
+        el('td', 'pid', r.playerId), el('td', 'nm', r.name), el('td', 'mob', r.mobile), el('td', 'dt', fmtDate(r.reg)),
+        el('td'), el('td', 'num', fmtNum(r.score)), el('td'), el('td', 'num', r.awareness === null ? '—' : r.awareness + ' / 5'), el('td')
+      ];
+      cells[4].append(el('span', 'pill', r.status || '—'));
+      cells[6].append(yesNo(r.facebook));
+      cells[8].append(r.winner ? trophy() : el('span', 'no', '—'));
+      tr.append(...cells);
+      frag.append(tr);
+    });
+    $('rows').replaceChildren(frag);
   }
-  $('moreBtn').addEventListener('click', () => { shown += PAGE; render(); });
+
+  // ---------- PHONE: load more cards while scrolling ----------
+  function mobileMeta() {
+    const n = Math.min(shown, view.length);
+    const updated = generatedAt ? ' · Updated ' + fmtDate(parseDate(generatedAt)) : '';
+    $('meta').textContent = view.length.toLocaleString() + ' player' + (view.length === 1 ? '' : 's') + (n < view.length ? ' · showing ' + n : '') + updated;
+    $('moreSentinel').hidden = n >= view.length;
+  }
+  function loadMore() {
+    if (!mobileQ.matches || shown >= view.length || $('cards').hidden) return;
+    const next = view.slice(shown, shown + PAGE);
+    shown += next.length;
+    $('cards').append(cardsFor(next));
+    mobileMeta();
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) loadMore(); }, { rootMargin: '600px 0px' }).observe($('moreSentinel'));
+  }
+  // Backup for browsers where the observer is missing or lazy: check on scroll (throttled to ~10 per second).
+  let scrollTick = false;
+  window.addEventListener('scroll', () => {
+    if (scrollTick) return;
+    scrollTick = true;
+    setTimeout(() => {
+      scrollTick = false;
+      const s = $('moreSentinel');
+      if (!s.hidden && s.getBoundingClientRect().top < innerHeight + 600) loadMore();
+    }, 100);
+  }, { passive: true });
+  $('moreSentinel').addEventListener('click', loadMore); // tap fallback
+  function cardsFor(list) {
+    const frag = document.createDocumentFragment();
+    list.forEach((r) => {
+      const c = el('article', 'pcard' + (r.winner ? ' win' : ''));
+      const top = el('div', 'top');
+      top.append(el('div', 'nm', r.name || '—'), r.winner ? trophy() : el('span', 'pill', r.status || '—'));
+      const info = el('div', 'info');
+      const tel = el('a', 'mob', r.mobile || '—');
+      if (r.mobile) tel.href = 'tel:' + r.mobile;
+      info.append(tel, el('span', 'dt', fmtDate(r.reg)));
+      const dl = el('dl');
+      [['Driving', fmtNum(r.score)], ['Awareness', r.awareness === null ? '—' : r.awareness + '/5'], ['Facebook', r.facebook ? '✓ Yes' : 'No']]
+        .forEach(([k, v]) => { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); });
+      const foot = el('div', 'foot');
+      foot.append(el('span', 'pid', r.playerId), r.winner && r.status ? el('span', 'pill', r.status) : el('span'));
+      c.append(top, info, dl, foot);
+      frag.append(c);
+    });
+    return frag;
+  }
+  // ---------- PAGINATION ----------
+  function pageList(pages) {
+    // 1 … 4 5 [6] 7 8 … 20  (phones show fewer neighbours)
+    const near = 2, out = [];
+    for (let p = 1; p <= pages; p++) {
+      if (p === 1 || p === pages || Math.abs(p - page) <= near) out.push(p);
+      else if (out[out.length - 1] !== '…') out.push('…');
+    }
+    return out;
+  }
+  function renderPager(pages) {
+    const nav = $('pager');
+    nav.hidden = false; // desktop always shows the pager
+    const btn = (label, target, opts = {}) => {
+      const b = el('button', 'pg' + (opts.cls ? ' ' + opts.cls : ''), label);
+      b.type = 'button';
+      if (opts.aria) b.setAttribute('aria-label', opts.aria);
+      if (target === page && !opts.cls) { b.classList.add('cur'); b.setAttribute('aria-current', 'page'); }
+      if (target < 1 || target > pages || (target === page && !opts.cls)) b.disabled = true;
+      else b.addEventListener('click', () => goPage(target));
+      return b;
+    };
+    const frag = document.createDocumentFragment();
+    frag.append(btn('‹ Prev', page - 1, { cls: 'step', aria: 'Previous page' }));
+    pageList(pages).forEach((p) => frag.append(p === '…' ? el('span', 'gap', '…') : btn(String(p), p, { aria: 'Page ' + p })));
+    frag.append(btn('Next ›', page + 1, { cls: 'step', aria: 'Next page' }));
+    const size = el('select', 'pg-size');
+    size.setAttribute('aria-label', 'Rows per page');
+    [25, 50, 100].forEach((n) => size.append(new Option(n + ' / page', n, false, n === pageSize)));
+    size.addEventListener('change', () => { pageSize = Number(size.value); page = 1; render(); });
+    frag.append(size);
+    nav.replaceChildren(frag);
+  }
+  function goPage(p) {
+    page = p;
+    render();
+    $('meta').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
 
   // ---------- EXPORT (currently filtered records, all 10 columns) ----------
   function filename(ext) {
@@ -289,6 +389,50 @@
     XLSX.utils.book_append_sheet(wb, ws, 'Players');
     const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true });
     download(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename('xlsx'));
+  });
+
+  // ---------- GAME SETTINGS (MIN_WIN_SCORE, EVENT_END_DATE Script Properties) ----------
+  let settingsReady = false;
+  function setMsg(text, kind) { const m = $('setMsg'); m.textContent = text || ''; m.className = 'set-msg' + (kind ? ' ' + kind : ''); }
+  function renderSettings(s) {
+    const form = $('setForm');
+    settingsReady = !!(s && typeof s === 'object');
+    form.querySelectorAll('input, button').forEach((n) => { n.disabled = !settingsReady; });
+    if (!settingsReady) {
+      $('setNow').textContent = '';
+      setMsg('Add the latest GameSettings.gs to Apps Script and deploy a new version to manage settings here.', 'bad');
+      return;
+    }
+    $('sMin').value = Number.isFinite(Number(s.minWinScore)) ? s.minWinScore : (s.defaultMinWinScore || 1000);
+    $('sEnd').value = s.eventEndDate ? s.eventEndDate.replace(' ', 'T') + (s.eventEndDate.length === 10 ? 'T23:59' : '') : '';
+    const now = $('setNow');
+    now.textContent = '';
+    const win = 'Win: more than ' + Number(s.minWinScore).toLocaleString() + ' points · ';
+    now.append(win);
+    if (!s.eventEnd) now.append('No end date');
+    else {
+      const when = dispFmt.format(new Date(s.eventEnd));
+      if (s.eventEnded) now.append(el('span', 'status-ended', 'Event ENDED ' + when));
+      else now.append('Ends ' + when);
+    }
+  }
+  $('setForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!settingsReady) return;
+    const btn = $('setSave');
+    if (btn.disabled) return;
+    const min = Number($('sMin').value);
+    if ($('sMin').value === '' || !Number.isInteger(min) || min < 0 || min > 1000000) { setMsg('Enter a whole number between 0 and 1,000,000.', 'bad'); return; }
+    const end = $('sEnd').value; // "YYYY-MM-DDTHH:mm" or ""
+    btn.disabled = true; btn.textContent = 'SAVING…'; setMsg('');
+    try {
+      const r = await api('saveGameSettings', { password: pass, minWinScore: min, eventEndDate: end });
+      renderSettings(r.settings);
+      setMsg('Saved. Phones pick up the new settings the next time the game opens.', 'ok');
+    } catch (err) {
+      if (err.auth && !/not been installed/.test(err.message)) { pass = ''; setPass(null); showLogin(err.message); }
+      else setMsg('Not saved: ' + err.message, 'bad');
+    } finally { btn.disabled = !settingsReady; btn.textContent = 'SAVE SETTINGS'; }
   });
 
   // ---------- BOOT ----------

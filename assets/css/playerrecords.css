@@ -124,3 +124,93 @@ tr.win:hover { background: #fff0c4; }
 }
 @media (max-width: 380px) { .eyebrow { display: none; } }
 @media (prefers-reduced-motion: reduce) { .btn, .state .spin { transition: none; animation-duration: 3s; } }
+
+/* Game settings (minimum win score, event end date) */
+.settings { padding: 16px; margin-bottom: 14px; border-top: 4px solid var(--gold); }
+.set-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 10px; }
+.set-head h2 { margin: 0; font: 800 20px/1 var(--heading); text-transform: uppercase; letter-spacing: .02em; }
+.set-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.set-grid label > span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.set-grid small { display: block; margin-top: 4px; font-size: 12px; }
+.set-actions { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; }
+.set-msg { margin: 10px 0 0; min-height: 1.3em; font-size: 13px; font-weight: 700; }
+.set-msg.ok { color: var(--green); }
+.set-msg.bad { color: var(--red); }
+.status-ended { color: var(--red); font-weight: 800; }
+@media (max-width: 860px) {
+  .set-grid { grid-template-columns: minmax(0, 1fr); }
+  .set-actions { flex-direction: row; padding-top: 0; }
+  .set-actions .btn { flex: 1; }
+}
+
+/* Header buttons: Settings + Lock */
+.who { gap: 8px; }
+.topbar .btn.ghost.on { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* Settings – its own section */
+.settings-view { max-width: 760px; }
+.settings-view .back { margin-bottom: 12px; }
+.settings-view .set-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.settings-view .set-actions { grid-column: 1 / -1; flex-direction: row; padding-top: 4px; }
+.set-now { margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: #f3f8f9; font-size: 14px; font-weight: 700; }
+
+/* Search row (phones also get a single date picker) */
+.search-row { display: flex; gap: 10px; }
+.search-row .search { flex: 1; min-width: 0; }
+.day-pick { display: none; }
+.filter-panel { display: grid; gap: 12px; }
+
+/* Pagination */
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 16px 0 8px; }
+.pg { min-width: 42px; height: 42px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff;
+  font-weight: 800; font-variant-numeric: tabular-nums; cursor: pointer; touch-action: manipulation; }
+.pg:hover:not(:disabled) { border-color: var(--teal); color: var(--teal-d); }
+.pg.cur { background: var(--teal); border-color: var(--teal); color: #fff; cursor: default; }
+.pg:disabled:not(.cur) { opacity: .4; cursor: default; }
+.pg:focus-visible { outline: 3px solid var(--aqua); outline-offset: 2px; }
+.pager .gap { padding: 0 2px; color: var(--muted); }
+
+/* Phone cards */
+.pcard .top { align-items: center; }
+.pcard .info { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.pcard .info .mob { color: var(--teal-d); font-weight: 800; text-decoration: none; }
+.pcard dl { background: #f5fafb; border-radius: 10px; padding: 8px 10px; }
+.pcard.win dl { background: #fff9e8; }
+.pcard dd { font-size: 16px; }
+.pcard .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pcard .foot .pid { font-size: 11px; }
+
+@media (max-width: 860px) {
+  .dash { padding: 12px 12px 28px; }
+  .topbar { padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: 10px; }
+  .brand img { width: 36px; height: 36px; }
+  .topbar .btn.sm { min-height: 40px; padding: 0 12px; }
+  .who .lbl { display: none; }
+  .who .btn span[aria-hidden] { display: inline; font-size: 17px; }
+  .kpis { gap: 8px; margin-bottom: 10px; }
+  .kpi { padding: 10px 12px; }
+  .kpi b { font-size: 24px; margin-top: 4px; }
+  .kpi span { font-size: 10px; letter-spacing: .04em; }
+  .toolbar { padding: 10px; gap: 10px; }
+  /* Phones: search + one date only – no other filters or downloads */
+  .filter-panel { display: none; }
+  .search-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 150px); gap: 8px; }
+  .day-pick { display: block; min-width: 0; }
+  .search-row input { min-width: 0; width: 100%; }
+  .day-pick input { padding: 0 8px; font-size: 15px; }
+  .meta { margin: 10px 2px 8px; font-size: 12px; }
+  .pg { min-width: 44px; height: 44px; }
+  .pg.step { padding: 0 10px; }
+  .settings-view .set-grid { grid-template-columns: minmax(0, 1fr); }
+  .settings-view .set-actions { flex-direction: column; }
+  .settings-view .set-actions .btn { width: 100%; }
+}
+@media (max-width: 380px) { .pg { min-width: 38px; padding: 0 8px; } }
+
+/* Phones: "loading more" bar under the cards */
+.more-sentinel { display: block; width: 100%; margin: 12px 0 0; padding: 12px; border: 0; background: none; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center; }
+/* Desktop pager: rows-per-page */
+.pg-size { width: auto; min-height: 42px; margin-left: 8px; padding: 0 34px 0 12px; font-size: 14px; font-weight: 700; }
+/* Never let anything widen the page on phones */
+html, body { max-width: 100%; }
+input[type="date"], input[type="datetime-local"] { min-width: 0; }

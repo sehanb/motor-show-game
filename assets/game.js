@@ -675,8 +675,13 @@
     if (ONLINE && rec.scoreSaved === false) return saveScore(false);
     if (!rec.eligible) {
       $('stShield').textContent = rec.shields || 0; $('stCoin').textContent = rec.coins || 0; $('stDodge').textContent = rec.dodged || 0;
+      // Not qualified: compare the score with the qualifying score so it never looks like a win.
+      const need = minWinScore() + 1, short = Math.max(0, need - rec.score);
+      $('doneNeed').textContent = need.toLocaleString();
+      $('doneShort').textContent = short ? `You were ${short.toLocaleString()} points short. Thanks for playing!` : 'Thanks for playing!';
+      $('doneBar').style.width = Math.max(4, Math.min(100, (rec.score / need) * 100)) + '%';
       show('doneOv');
-      if (fresh) { countUp($('doneScore'), rec.score); tone(523, 0.12); setTimeout(() => tone(659, 0.2), 120); }
+      if (fresh) { countUp($('doneScore'), rec.score); tone(392, 0.16); setTimeout(() => tone(330, 0.24), 160); }
       else $('doneScore').textContent = rec.score.toLocaleString();
       return;
     }
