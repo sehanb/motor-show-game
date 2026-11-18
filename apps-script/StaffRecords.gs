@@ -4,7 +4,7 @@
  *
  * Action (POST body JSON, same endpoint as the game):
  *   getPlayerRecords { password } → { success, records:[…10 columns…], generatedAt }
- *   getLeaderboard   { playerId? } → { success, players:[{name, score, awareness, winner, me?}] }  (public, no personal data)
+ *   getLeaderboard   { playerId? } → { success, settings, players:[{name, score, awareness, winner, me?}] }  (public, no personal data)
  *
  * The password is kept ONLY in Script Properties (private to project editors), never in the website.
  * Five wrong passwords lock access for 15 minutes.
@@ -124,6 +124,8 @@ function publicLeaderboard_(body) {
   var me = typeof body.playerId === 'string' ? body.playerId : '';
   return {
     success: true,
+    // Event settings (GameSettings.gs). Skipped if that file is not added yet.
+    settings: typeof publicGameSettings_ === 'function' ? publicGameSettings_() : null,
     players: rows.map(function (r) {
       var o = { name: r.name, score: r.score, awareness: r.awareness, winner: r.winner };
       if (me && r.id === me) o.me = true;

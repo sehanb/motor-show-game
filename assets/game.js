@@ -19,6 +19,22 @@
   const Api = window.SlicApi;
   const ONLINE = !!(Api && Api.enabled);
 
+  // Event settings from Google Script Properties (MIN_WIN_SCORE, EVENT_END_DATE), delivered with
+  // getLeaderboard. The last known values are kept on the phone so they apply instantly next time.
+  // Missing settings (older server, offline) → default threshold, no end date.
+  const SETTINGS_KEY = 'slic_mf2026_settings';
+  let settings = {};
+  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch (e) { settings = {}; }
+  function minWinScore() {
+    const n = Number(settings.minWinScore);
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : CONFIG.eligibilityThreshold;
+  }
+  function eventEnded() {
+    if (settings.eventEnded === true) return true;
+    const end = Date.parse(settings.eventEnd || '');
+    return Number.isFinite(end) && Date.now() > end;
+  }
+
   // SLIC General – Digital Services Awareness Quiz. Edit questions, options and correct answers here.
   // `correct` is the index of the right option. The API receives one boolean per question
   // (true = answered correctly); 5/5 correct = winner.
@@ -109,9 +125,10 @@
   setMuted(muted);
 
   // ================= SCREENS =================
-  const OVS = ['reg', 'countOv', 'pauseOv', 'eligibleOv', 'doneOv', 'fbOv', 'quizOv', 'winOv', 'thanksOv', 'endedOv', 'boardOv', 'saveOv'];
+  const OVS = ['reg', 'countOv', 'pauseOv', 'eligibleOv', 'doneOv', 'fbOv', 'quizOv', 'winOv', 'thanksOv', 'endedOv', 'boardOv', 'saveOv', 'closedOv'];
   let screen = 'reg';
   function show(id) {
+    if (id === 'reg' && eventEnded()) id = 'closedOv'; // no new players after EVENT_END_DATE
     screen = id || 'playing';
     OVS.forEach((o) => $(o).classList.toggle('on', o === id));
     stage.dataset.screen = screen;
@@ -156,6 +173,7 @@
   $('regForm').onsubmit = (e) => {
     e.preventDefault();
     if (registering) return;
+    if (eventEnded()) return show('closedOv');
     const name = Store.cleanName($('pname').value);
     const mobile = Store.normaliseMobile($('pphone').value);
     if (!name) return ($('err').textContent = 'Please enter your name (letters only, 2–40 characters).');
@@ -191,6 +209,7 @@
       countdown();
     }).catch((err) => {
       setRegBusy(false);
+      if (err.server && /event has ended/i.test(err.message)) { settings.eventEnded = true; return show('closedOv'); }
       $('err').textContent = 'Registration was not saved. ' + err.message + ' Please try again.';
     });
   }
@@ -624,7 +643,7 @@
   function finish() {
     S.running = false; cancelAnimationFrame(raf); playing(false);
     const score = Math.floor(S.score);
-    const eligible = score > CONFIG.eligibilityThreshold;
+    const eligible = score > minWinScore();
     const rec = Store.update({ status: 'COMPLETED', gameCompleted: true, score, shields: S.shields, coins: S.coins, dodged: S.dodged, eligible, scoreSaved: !ONLINE });
     if (!ONLINE) { Store.addScore(rec); return route(rec, true); }
     saveScore(true);
@@ -862,6 +881,22 @@
     }
     requestAnimationFrame(idle);
   })();
+  // Event settings: apply cached values now, then refresh from the server in the background.
+  function applySettings() {
+    const txt = minWinScore().toLocaleString();
+    document.querySelectorAll('[data-min-win]').forEach((el) => { el.textContent = txt; });
+    // After the end date, new players see the "event ended" screen; finished players keep their results.
+    if (eventEnded() && screen === 'reg') show('closedOv');
+  }
+  function loadSettings() {
+    applySettings();
+    if (!ONLINE) return;
+    Api.getLeaderboard().then((res) => {
+      settings = res && res.settings && typeof res.settings === 'object' ? res.settings : {};
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      applySettings();
+    }).catch(() => {}); // offline: keep the cached settings
+  }
   if (MULTI_ATTEMPTS) {
     // Testing Mode: every visit starts at an empty registration form. An unfinished earlier session is closed off.
     const prev = Store.current();
@@ -873,4 +908,5 @@
   } else {
     route(Store.current(), false);
   }
+  loadSettings();
 })();

@@ -23,7 +23,7 @@
     <span class="eyebrow">SLIC General Motor Game</span>
     <h2 class="flow-title">WELCOME TO<br><em>SLIC General Motor Game!</em></h2>
     <p class="sub">Get ready for the ultimate 30-second Safe Driving Challenge!</p>
-    <div class="how compact-how"><div><b>🛡</b>Shield +100</div><div><b class="gold-ico">🛡</b>Gold shield +200</div><div><b>↔</b>Swipe to steer</div><div><b>🏆</b>1,000+ unlocks the challenge</div></div>
+    <div class="how compact-how"><div><b>🛡</b>Shield +100</div><div><b class="gold-ico">🛡</b>Gold shield +200</div><div><b>↔</b>Swipe to steer</div><div><b>🏆</b><span data-min-win>1,000</span>+ unlocks the challenge</div></div>
     <form id="regForm" novalidate>
       <div class="field"><label for="pname">YOUR NAME</label><input id="pname" maxlength="40" autocomplete="name" placeholder="e.g. Kasun Perera" required></div>
       <div class="field"><label for="pphone">SRI LANKAN MOBILE NUMBER</label><input id="pphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="07X XXX XXXX" required></div>
@@ -53,7 +53,7 @@
     <h2 class="flow-title">THANK YOU FOR DRIVING<br><em>WITH SLIC GENERAL!</em></h2>
     <p class="result-label">YOUR FINAL SCORE</p><div class="scorebig" id="doneScore">0</div>
     <div class="stats"><div><b id="stShield">0</b><span>SHIELDS</span></div><div><b id="stCoin">0</b><span>GOLD</span></div><div><b id="stDodge">0</b><span>DODGED</span></div></div>
-    <p class="sub">Scores above 1,000 unlock the Service Awareness Challenge. Thank you for driving safely – on the road, every second counts.</p>
+    <p class="sub">Scores above <span data-min-win>1,000</span> unlock the Service Awareness Challenge. Thank you for driving safely – on the road, every second counts.</p>
     <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW ALL WINNERS 🏆</button></div>
   </section>
 
@@ -127,6 +127,15 @@
     <h2 class="flow-title">THANK YOU FOR<br><em>JOINING US!</em></h2>
     <p class="sub">Your challenge attempt was interrupted before it finished, so it has ended. Each player has one attempt.</p>
     <div class="after-actions cta-pair"><a class="big teal" href="claims.html">EXPLORE OUR SERVICES →</a><a class="big explore" href="index.html#products">DISCOVER MOTOR PROTECTION →</a><button class="link-btn" data-hof>VIEW ALL WINNERS 🏆</button></div>
+  </section>
+
+  <!-- EVENT ENDED (after EVENT_END_DATE) -->
+  <section class="ov" id="closedOv">
+    <img class="logo-big" src="assets/logo.png" alt="SLIC General">
+    <span class="eyebrow">THE CHALLENGE HAS ENDED</span>
+    <h2 class="flow-title">THANK YOU FOR<br><em>YOUR INTEREST!</em></h2>
+    <p class="sub">The SLIC General Motor Game has ended and is no longer accepting new players. Discover our motor insurance and digital services on our website.</p>
+    <div class="after-actions cta-pair"><a class="big teal" href="index.html">VISIT OUR WEBSITE →</a><button class="link-btn" data-hof>VIEW ALL WINNERS 🏆</button></div>
   </section>
 
   <!-- ALL WINNERS (live from Google Sheets) -->
