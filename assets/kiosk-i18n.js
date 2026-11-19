@@ -19,7 +19,6 @@
       "findProtection": "Find your motor protection",
       "touchExplore": "TOUCH TO EXPLORE",
       "touchDescription": "Discover protection designed for your journey.",
-      "conceptNote": "Conceptual SLIC-branded cityscape · AI-generated imagery",
       "back": "BACK",
       "home": "HOME",
       "products": "Products",
@@ -94,7 +93,7 @@
       "exploreProduct": "Explore {name}",
       "qrAria": "Scan to continue on your phone",
       "familyAlt": "Sri Lankan family enjoying a hill-country journey beside their vehicle",
-      "cityAlt": "Conceptual Colombo sunset scene with a white SUV and an illuminated SLIC-branded building",
+      "cityAlt": "Colombo sunset scene with a white SUV and an illuminated SLIC-branded building",
       "titleWelcome": "Welcome",
       "titleProducts": "Motor protection",
       "titleGuide": "Find your motor protection",
@@ -116,7 +115,7 @@
       ],
       [
         "Customer support",
-        "Speak to SLIC General on 011 2 357 357."
+        "Visit slicgeneral.com for full details."
       ],
       [
         "Your kind of vehicle",
@@ -349,7 +348,7 @@
       {
         "name": "Customer enquiries",
         "short": "A conversation can make things clearer.",
-        "detail": "For policy questions and general enquiries, contact the official SLIC General hotline: 011 2 357 357. Our exhibition team can also help you understand the options.",
+        "detail": "For policy questions and general enquiries, visit the official SLIC General website. Our exhibition team can also help you understand the options.",
         "action": "Talk to our team"
       },
       {
@@ -465,7 +464,6 @@
       "findProtection": "ඔබට ගැළපෙන මෝටර් රථ රැකවරණය සොයන්න",
       "touchExplore": "තිරය ස්පර්ශ කර ගවේෂණය කරන්න",
       "touchDescription": "ඔබේ ගමනට ගැළපෙන රැකවරණය සොයාගන්න.",
-      "conceptNote": "SLIC නාමය සහිත සංකල්පිත නගර දසුනකි · AI නිර්මාණයකි",
       "back": "ආපසු",
       "home": "මුල් පිටුව",
       "products": "රක්ෂණ විසඳුම්",
@@ -540,7 +538,7 @@
       "exploreProduct": "{name} ගැන දැනගන්න",
       "qrAria": "ඔබේ දුරකථනයෙන් වැඩිදුර දැනගැනීමට ස්කෑන් කරන්න",
       "familyAlt": "කඳුකර ගමනක යෙදෙන ශ්‍රී ලාංකික පවුලක් සහ ඔවුන්ගේ වාහනය",
-      "cityAlt": "SLIC නාමය ආලෝකමත් වූ සංකල්පිත ගොඩනැගිල්ලක් සහ සුදු SUV රථයක් සහිත කොළඹ සන්ධ්‍යා දර්ශනය",
+      "cityAlt": "SLIC නාමය ආලෝකමත් වූ ගොඩනැගිල්ලක් සහ සුදු SUV රථයක් සහිත කොළඹ සන්ධ්‍යා දර්ශනය",
       "titleWelcome": "මුල් පිටුව",
       "titleProducts": "මෝටර් රථ රැකවරණය",
       "titleGuide": "මට ගැළපෙන රැකවරණය",
@@ -562,7 +560,7 @@
       ],
       [
         "පාරිභෝගික සහාය",
-        "011 2 357 357 ඔස්සේ SLIC General අමතන්න."
+        "වැඩි විස්තර සඳහා slicgeneral.com වෙත පිවිසෙන්න."
       ],
       [
         "ඔබේ වාහනයට ගැළපෙන විකල්ප",
@@ -657,7 +655,7 @@
       {
         "name": "පාරිභෝගික විමසීම්",
         "short": "සුහද කතාබහකින් පැහැදිලි පිළිතුරු ලබාගන්න.",
-        "detail": "ඔප්පු පිළිබඳ ගැටලු සහ පොදු විමසීම් සඳහා SLIC General නිල දුරකථන අංකය වන 011 2 357 357 අමතන්න. විකල්ප හඳුනාගැනීමට ප්‍රදර්ශන කුටියේ අපගේ කණ්ඩායමෙන් ද සහාය ලබාගත හැක.",
+        "detail": "ඔප්පු පිළිබඳ ගැටලු සහ පොදු විමසීම් සඳහා SLIC General නිල වෙබ් අඩවියට පිවිසෙන්න. විකල්ප හඳුනාගැනීමට ප්‍රදර්ශන කුටියේ අපගේ කණ්ඩායමෙන් ද සහාය ලබාගත හැක.",
         "action": "අපගේ කණ්ඩායම සමඟ කතා කරන්න"
       },
       {

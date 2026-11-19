@@ -3116,3 +3116,35 @@ html { scrollbar-width: thin; scrollbar-color: #ffffff40 transparent; }
 ::-webkit-scrollbar-thumb { background: #ffffff33; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background: #65e0dc99; background-clip: padding-box; }
 ::-webkit-scrollbar-corner, ::-webkit-scrollbar-button { display: none; background: transparent; }
+/* ===== Footer: website + Facebook call to action ===== */
+footer { padding: 0; background: linear-gradient(135deg, #0b6670 0%, #06343b 60%, #041f25 100%); border-top: 0; }
+footer .wrap.footer-cta { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 40px; align-items: center; padding: 70px 0 50px; }
+.footer-cta .eyebrow { color: #b2f8f5; }
+.footer-cta h2 { font-family: var(--heading); font-size: clamp(38px, 5vw, 72px); line-height: .95; color: #f4f7f5; margin: 12px 0 16px; }
+.footer-cta h2 em { font-style: normal; color: #5ddcd6; }
+.footer-cta p { font-size: 15px; color: rgba(255,255,255,.8); max-width: 480px; margin: 0; }
+.fc-actions { display: grid; gap: 16px; }
+.fc-btn { display: flex; align-items: center; gap: 16px; padding: 20px 22px; border-radius: 14px; color: #fff; text-decoration: none; font-weight: 700; font-size: 19px; transition: transform .2s, box-shadow .2s; }
+.fc-btn small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .85; margin-bottom: 3px; }
+.fc-btn > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.fc-btn b { font-size: 24px; }
+.fc-btn:hover, .fc-btn:focus-visible { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,.35); }
+.fc-btn.site { background: #5ddcd6; color: #04262b; }
+.fc-btn.fb { background: #1877f2; }
+.fc-ico { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.22); font-size: 22px; }
+footer .wrap.footer-base { display: flex; align-items: center; gap: 18px; padding: 22px 0 28px; border-top: 1px solid rgba(255,255,255,.15); }
+.footer-base img { width: 64px; }
+.footer-base p { margin: 0; font-size: 12px; color: rgba(255,255,255,.65); }
+@media (max-width: 767px) {
+  footer .wrap.footer-cta { grid-template-columns: 1fr; padding: 48px 0 36px; gap: 28px; }
+  .fc-btn { font-size: 16px; padding: 16px 18px; }
+  footer .wrap.footer-base { flex-direction: row; }
+}
+/* Main-website link: highlighted text, not a button */
+@media (max-width: 767px) {
+  footer .wrap.footer-base { flex-direction: column; justify-content: center; text-align: center; }
+  .footer-base img { margin: 0 auto; }
+}
+.nav-links a.nav-site { color: #5ddcd6 !important; font-weight: 800; padding-left: 22px; border-left: 1px solid rgba(255,255,255,.2); }
+.nav-links a.nav-site:hover, .nav-links a.nav-site:focus-visible { color: #b2f8f5 !important; }
+@media (max-width: 767px) { .nav-links a.nav-site { border-left: 0; padding-left: 0; } }
